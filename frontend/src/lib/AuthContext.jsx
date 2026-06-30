@@ -33,10 +33,9 @@ export function AuthProvider({ children }) {
       const clubIds = (scRows || []).map(r => r.club_id)
 
       if (clubIds.length > 1) {
-        const { data: clubsData, error: clubsErr } = await supabase
+        const { data: clubsData } = await supabase
           .from('clubs').select('*').in('id', clubIds)
-        console.log('[BranchPicker] clubIds:', clubIds, 'clubsData:', clubsData, 'err:', clubsErr)
-        const clubs = clubsData || []
+const clubs = clubsData || []
         setAvailableClubs(clubs)
         setActiveClub(prev => prev ? clubs.find(c => c.id === prev.id) || null : null)
       } else {

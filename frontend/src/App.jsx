@@ -6,8 +6,7 @@ import { Building2 } from 'lucide-react'
 
 function BranchPicker() {
   const { profile, activeClub, availableClubs, switchClub } = useAuth()
-  console.log('[BP]', { hasProfile: !!profile, activeClub: activeClub?.id ?? null, clubs: availableClubs.length })
-  if (!profile || activeClub || availableClubs.length <= 1) return null
+if (!profile || activeClub || availableClubs.length <= 1) return null
   return (
     <div className="fixed inset-0 z-50 bg-gray-50 flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-sm flex flex-col gap-6">
