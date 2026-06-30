@@ -98,7 +98,7 @@ export default function Join() {
 
     const { data, error: err } = await supabase
       .from('customers')
-      .insert({ club_id: clubData.id, full_name: form.full_name, phone: form.phone, email: form.email })
+      .insert({ full_name: form.full_name, phone: form.phone, email: form.email })
       .select().single()
 
     setSaving(false)

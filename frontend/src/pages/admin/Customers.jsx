@@ -25,7 +25,7 @@ export default function Customers() {
 
   async function load() {
     const { data } = await supabase.from('customers').select('*')
-      .eq('club_id', profile.club_id).order('created_at', { ascending: false })
+      .order('created_at', { ascending: false })
     setCustomers(data || [])
     setLoading(false)
   }
@@ -41,7 +41,7 @@ export default function Customers() {
   async function addCustomer(e) {
     e.preventDefault()
     setSaving(true)
-    const { error } = await supabase.from('customers').insert({ ...form, club_id: profile.club_id })
+    const { error } = await supabase.from('customers').insert({ ...form })
     setSaving(false)
     if (error) { toast(t('common.error'), 'error'); return }
     toast(t('customers.addSuccess'))

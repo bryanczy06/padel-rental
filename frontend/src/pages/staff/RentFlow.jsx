@@ -44,7 +44,6 @@ export default function RentFlow() {
     const q = `%${search}%`
     const { data } = await supabase.from('customers').select('*')
       .or(`full_name.ilike.${q},phone.ilike.${q},email.ilike.${q}`)
-      .eq('club_id', profile.club_id)
       .limit(10)
     setSearchRes(data || [])
     setSearching(false)
