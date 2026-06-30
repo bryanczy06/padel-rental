@@ -37,13 +37,12 @@ export function AuthProvider({ children }) {
 
   async function handleProfile(sess) {
     if (sess) {
+      const prof = await getProfile()
+      setProfile(prof)
       try {
-        const prof = await getProfile()
-        setProfile(prof)
         await loadClubs(prof)
       } catch (e) {
-        console.error('handleProfile error:', e)
-        setProfile(null)
+        console.error('loadClubs error:', e)
       }
     } else {
       setProfile(null)
