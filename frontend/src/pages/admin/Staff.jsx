@@ -27,6 +27,8 @@ export default function Staff() {
   const [allClubs, setAllClubs] = useState([])
   const [loading, setLoading]   = useState(true)
   const [addOpen, setAddOpen]   = useState(false)
+  const [addTab, setAddTab]     = useState('new') // 'new' | 'existing'
+  const [assignEmail, setAssignEmail] = useState('')
   const [editOpen, setEditOpen] = useState(false)
   const [editTarget, setEditTarget] = useState(null)
   const [form, setForm]         = useState({ full_name: '', email: '', phone: '', password: '', role: 'staff' })
@@ -39,9 +41,9 @@ export default function Staff() {
       supabase.from('profiles').select('*').eq('club_id', activeClub.id).order('created_at'),
       supabase.from('clubs').select('owner_id, profiles!clubs_owner_id_fkey(*)').eq('id', activeClub.id).single(),
     ])
-    const list = [...(staffData || [])]
+    const list = (staffData || []).filter(s => s.role !== 'super_admin')
     const owner = clubData?.profiles
-    if (owner && !list.find(s => s.id === owner.id)) {
+    if (owner && owner.role !== 'super_admin' && !list.find(s => s.id === owner.id)) {
       list.unshift(owner)
     }
     setStaff(list)
@@ -89,6 +91,21 @@ export default function Staff() {
     toast(t('staff.addSuccess'))
     setAddOpen(false)
     setForm({ full_name: '', email: '', phone: '', password: '', role: 'staff' })
+    load()
+  }
+
+  async function assignExisting(e) {
+    e.preventDefault()
+    setSaving(true)
+    const { data: existing } = await supabase
+      .from('profiles').select('id, full_name, role').eq('email', assignEmail.trim()).single()
+    if (!existing) { toast('משתמש לא נמצא עם המייל הזה', 'error'); setSaving(false); return }
+    const { error } = await supabase.from('profiles').update({ club_id: activeClub.id }).eq('id', existing.id)
+    setSaving(false)
+    if (error) { toast(error.message, 'error'); return }
+    toast(`${existing.full_name} שובץ למועדון זה`)
+    setAssignEmail('')
+    setAddOpen(false)
     load()
   }
 
@@ -176,38 +193,68 @@ export default function Staff() {
       </div>
 
       {/* Add staff modal */}
-      <Modal open={addOpen} onClose={() => setAddOpen(false)} title={t('staff.add')}>
-        <form onSubmit={addStaff} className="flex flex-col gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('staff.fullName')} *</label>
-            <input required value={form.full_name} onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))} className="input" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('staff.email')} *</label>
-            <input required type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className="input" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('staff.phone')}</label>
-            <input type="tel" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} className="input" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('staff.password')} *</label>
-            <input required type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} className="input" minLength={6} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('staff.role')}</label>
-            <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))} className="input">
-              <option value="staff">{t('staff.staffRole')}</option>
-              <option value="admin">{t('staff.admin')}</option>
-            </select>
-          </div>
-          <div className="flex gap-3 mt-1">
-            <button type="button" onClick={() => setAddOpen(false)} className="btn-secondary flex-1">{t('common.cancel')}</button>
-            <button type="submit" disabled={saving} className="btn-primary flex-1">
-              {saving ? t('common.loading') : t('staff.saveBtn')}
-            </button>
-          </div>
-        </form>
+      <Modal open={addOpen} onClose={() => { setAddOpen(false); setAddTab('new') }} title={t('staff.add')}>
+        {/* Tabs */}
+        <div className="flex rounded-xl bg-gray-100 p-1 mb-4 gap-1">
+          <button type="button" onClick={() => setAddTab('new')}
+            className={`flex-1 text-sm py-1.5 rounded-lg font-medium transition-colors ${addTab === 'new' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>
+            צור חדש
+          </button>
+          <button type="button" onClick={() => setAddTab('existing')}
+            className={`flex-1 text-sm py-1.5 rounded-lg font-medium transition-colors ${addTab === 'existing' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>
+            שבץ קיים
+          </button>
+        </div>
+
+        {addTab === 'new' ? (
+          <form onSubmit={addStaff} className="flex flex-col gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('staff.fullName')} *</label>
+              <input required value={form.full_name} onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))} className="input" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('staff.email')} *</label>
+              <input required type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className="input" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('staff.phone')}</label>
+              <input type="tel" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} className="input" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('staff.password')} *</label>
+              <input required type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} className="input" minLength={6} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('staff.role')}</label>
+              <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))} className="input">
+                <option value="staff">{t('staff.staffRole')}</option>
+                <option value="admin">{t('staff.admin')}</option>
+              </select>
+            </div>
+            <div className="flex gap-3 mt-1">
+              <button type="button" onClick={() => setAddOpen(false)} className="btn-secondary flex-1">{t('common.cancel')}</button>
+              <button type="submit" disabled={saving} className="btn-primary flex-1">
+                {saving ? t('common.loading') : t('staff.saveBtn')}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <form onSubmit={assignExisting} className="flex flex-col gap-4">
+            <p className="text-sm text-gray-500">הזן את המייל של עובד קיים במערכת כדי לשבץ אותו למועדון הנוכחי.</p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">כתובת מייל *</label>
+              <input required type="email" value={assignEmail}
+                onChange={e => setAssignEmail(e.target.value)}
+                className="input" placeholder="email@example.com" />
+            </div>
+            <div className="flex gap-3 mt-1">
+              <button type="button" onClick={() => setAddOpen(false)} className="btn-secondary flex-1">{t('common.cancel')}</button>
+              <button type="submit" disabled={saving} className="btn-primary flex-1">
+                {saving ? 'מחפש...' : 'שבץ לסניף'}
+              </button>
+            </div>
+          </form>
+        )}
       </Modal>
 
       {/* Edit staff modal */}

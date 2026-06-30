@@ -22,6 +22,8 @@ export default function SuperDashboard() {
   const [ownerOpen, setOwnerOpen] = useState(false)
   const [ownerTab, setOwnerTab]   = useState('new') // 'new' | 'existing'
   const [assignEmail, setAssignEmail] = useState('')
+  const [promoteOpen, setPromoteOpen] = useState(false)
+  const [promoteEmail, setPromoteEmail] = useState('')
   const [clubForm, setClubForm]   = useState({ name: '', slug: '' })
   const [editForm, setEditForm]   = useState({ name: '', slug: '' })
   const [adminForm, setAdminForm] = useState({ full_name: '', email: '', password: '', phone: '' })
@@ -138,6 +140,21 @@ export default function SuperDashboard() {
     load()
   }
 
+  async function promoteToSuperAdmin(e) {
+    e.preventDefault()
+    setSaving(true)
+    const { data: existing } = await supabase
+      .from('profiles').select('id, full_name, role').eq('email', promoteEmail.trim()).single()
+    if (!existing) { toast('משתמש לא נמצא עם המייל הזה', 'error'); setSaving(false); return }
+    if (existing.role === 'super_admin') { toast(`${existing.full_name} כבר סופר אדמין`, 'error'); setSaving(false); return }
+    const { error } = await supabase.from('profiles').update({ role: 'super_admin' }).eq('id', existing.id)
+    setSaving(false)
+    if (error) { toast(error.message, 'error'); return }
+    toast(`${existing.full_name} קודם לסופר אדמין`)
+    setPromoteEmail('')
+    setPromoteOpen(false)
+  }
+
   async function createAdmin(e) {
     e.preventDefault()
     setSaving(true)
@@ -175,9 +192,14 @@ export default function SuperDashboard() {
             </h1>
             <p className="text-sm text-gray-500 mt-0.5">ניהול כל המועדונים</p>
           </div>
-          <button onClick={() => setClubOpen(true)} className="btn-primary">
-            <Plus size={16} /> מועדון חדש
-          </button>
+          <div className="flex gap-2">
+            <button onClick={() => setPromoteOpen(true)} className="btn-secondary text-sm">
+              <ShieldCheck size={15} /> קדם לסופר אדמין
+            </button>
+            <button onClick={() => setClubOpen(true)} className="btn-primary">
+              <Plus size={16} /> מועדון חדש
+            </button>
+          </div>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -372,6 +394,26 @@ export default function SuperDashboard() {
           <div className="flex gap-3 mt-1">
             <button type="button" onClick={() => setAdminOpen(false)} className="btn-secondary flex-1">ביטול</button>
             <button type="submit" disabled={saving} className="btn-primary flex-1">{saving ? 'יוצר...' : 'צור אדמין'}</button>
+          </div>
+        </form>
+      </Modal>
+      {/* Promote to super_admin */}
+      <Modal open={promoteOpen} onClose={() => setPromoteOpen(false)} title="קדם משתמש לסופר אדמין">
+        <form onSubmit={promoteToSuperAdmin} className="flex flex-col gap-4">
+          <p className="text-sm text-amber-700 bg-amber-50 rounded-xl px-3 py-2">
+            סופר אדמין יש לו גישה מלאה לכל המועדונים. יש לבצע בזהירות.
+          </p>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">מייל המשתמש *</label>
+            <input required type="email" value={promoteEmail}
+              onChange={e => setPromoteEmail(e.target.value)}
+              className="input" placeholder="user@example.com" />
+          </div>
+          <div className="flex gap-3 mt-1">
+            <button type="button" onClick={() => setPromoteOpen(false)} className="btn-secondary flex-1">ביטול</button>
+            <button type="submit" disabled={saving} className="btn-primary flex-1">
+              {saving ? 'מקדם...' : 'קדם לסופר אדמין'}
+            </button>
           </div>
         </form>
       </Modal>
