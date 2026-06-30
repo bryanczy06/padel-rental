@@ -34,13 +34,14 @@ export default function SuperDashboard() {
     if (!clubsData) { setLoading(false); return }
 
     const enriched = await Promise.all(clubsData.map(async (club) => {
-      const [{ count: staffCount }, { count: racketCount }, { count: activeRentals }, { data: ownerData }] = await Promise.all([
+      const [{ count: staffCount }, { count: racketCount }, { count: activeRentals }, { data: ownerRows }] = await Promise.all([
         supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('club_id', club.id),
         supabase.from('rackets').select('*', { count: 'exact', head: true }).eq('club_id', club.id),
         supabase.from('rentals').select('*', { count: 'exact', head: true }).eq('club_id', club.id).is('returned_at', null),
-        supabase.from('profiles').select('full_name, email').eq('id', club.owner_id).single(),
+        supabase.from('club_owners').select('profiles(id, full_name, email)').eq('club_id', club.id),
       ])
-      return { ...club, staffCount, racketCount, activeRentals, ownerName: ownerData?.full_name, ownerEmail: ownerData?.email }
+      const owners = (ownerRows || []).map(r => r.profiles).filter(Boolean)
+      return { ...club, staffCount, racketCount, activeRentals, owners }
     }))
 
     setClubs(enriched)
@@ -93,19 +94,19 @@ export default function SuperDashboard() {
   async function assignExistingOwner(e) {
     e.preventDefault()
     setSaving(true)
-    // find profile by email
     const { data: existing } = await supabase
       .from('profiles').select('id, full_name, role').eq('email', assignEmail.trim()).single()
     if (!existing) { toast('משתמש לא נמצא עם המייל הזה', 'error'); setSaving(false); return }
 
-    // update role to owner if needed
+    // upsert into club_owners
+    const { error } = await supabase.from('club_owners').upsert({ club_id: targetClub.id, profile_id: existing.id })
+    if (error) { toast(error.message, 'error'); setSaving(false); return }
+
+    // promote role to owner if needed
     if (existing.role !== 'owner' && existing.role !== 'super_admin') {
       await supabase.from('profiles').update({ role: 'owner' }).eq('id', existing.id)
     }
-    // link club to owner
-    const { error } = await supabase.from('clubs').update({ owner_id: existing.id }).eq('id', targetClub.id)
     setSaving(false)
-    if (error) { toast(error.message, 'error'); return }
     toast(`${existing.full_name} שויך כבעלים של ${targetClub.name}`)
     setAssignEmail('')
     setOwnerOpen(false)
@@ -131,8 +132,8 @@ export default function SuperDashboard() {
     const json = await res.json()
     if (!res.ok || json.error) { setSaving(false); toast(json.error || 'שגיאה', 'error'); return }
 
-    // set as club owner_id
-    await supabase.from('clubs').update({ owner_id: json.user_id }).eq('id', targetClub.id)
+    // add to club_owners
+    await supabase.from('club_owners').upsert({ club_id: targetClub.id, profile_id: json.user_id })
     setSaving(false)
     toast(`בעלים נוצר למועדון ${targetClub.name}`)
     setOwnerForm({ full_name: '', email: '', password: '', phone: '' })
@@ -140,18 +141,16 @@ export default function SuperDashboard() {
     load()
   }
 
-  async function removeOwner(club) {
-    if (!confirm(`להסיר את הבעלים מ"${club.name}"?\nהמשתמש יישאר במערכת אך לא יהיה בעלים של המועדון.`)) return
-    const { error } = await supabase.from('clubs').update({ owner_id: null }).eq('id', club.id)
+  async function removeOwner(club, owner) {
+    if (!confirm(`להסיר את ${owner.full_name} מבעלים של "${club.name}"?`)) return
+    const { error } = await supabase.from('club_owners').delete().eq('club_id', club.id).eq('profile_id', owner.id)
     if (error) { toast(error.message, 'error'); return }
-    // downgrade role to admin if they're not owner of another club
-    if (club.owner_id) {
-      const { data: otherClubs } = await supabase.from('clubs').select('id').eq('owner_id', club.owner_id).neq('id', club.id)
-      if (!otherClubs?.length) {
-        await supabase.from('profiles').update({ role: 'admin' }).eq('id', club.owner_id)
-      }
+    // downgrade role to admin if they have no other clubs
+    const { data: otherClubs } = await supabase.from('club_owners').select('club_id').eq('profile_id', owner.id)
+    if (!otherClubs?.length) {
+      await supabase.from('profiles').update({ role: 'admin' }).eq('id', owner.id)
     }
-    toast(`בעלים הוסר מ"${club.name}"`)
+    toast(`${owner.full_name} הוסר מבעלים של "${club.name}"`)
     load()
   }
 
@@ -232,15 +231,19 @@ export default function SuperDashboard() {
                 </div>
                 {!club.active && <span className="badge badge-red shrink-0">מושבת</span>}
               </div>
-              {club.ownerName ? (
-                <div className="flex items-center gap-1.5 px-1 group">
-                  <Crown size={12} className="text-amber-500 shrink-0" />
-                  <p className="text-xs text-gray-500 truncate flex-1">{club.ownerName}</p>
-                  <button onClick={() => removeOwner(club)}
-                    title="הסר בעלים"
-                    className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-gray-300 hover:text-red-500 transition-all shrink-0">
-                    <Trash2 size={11} />
-                  </button>
+              {club.owners?.length ? (
+                <div className="flex flex-col gap-1 px-1">
+                  {club.owners.map(owner => (
+                    <div key={owner.id} className="flex items-center gap-1.5 group">
+                      <Crown size={12} className="text-amber-500 shrink-0" />
+                      <p className="text-xs text-gray-500 truncate flex-1">{owner.full_name}</p>
+                      <button onClick={() => removeOwner(club, owner)}
+                        title="הסר בעלים"
+                        className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-gray-300 hover:text-red-500 transition-all shrink-0">
+                        <Trash2 size={11} />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <p className="text-xs text-gray-400 px-1 italic">אין בעלים מוגדר</p>

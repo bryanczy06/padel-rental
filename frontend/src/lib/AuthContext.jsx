@@ -20,10 +20,12 @@ export function AuthProvider({ children }) {
       const own = (data || []).find(c => c.id === prof.club_id) || (data || [])[0] || null
       setActiveClub(prev => prev ? (data || []).find(c => c.id === prev.id) || own : own)
     } else if (prof.role === 'owner') {
-      const { data } = await supabase.from('clubs').select('*').eq('owner_id', prof.id).order('name')
-      setAvailableClubs(data || [])
-      const own = (data || []).find(c => c.id === prof.club_id) || (data || [])[0] || null
-      setActiveClub(prev => prev ? (data || []).find(c => c.id === prev.id) || own : own)
+      const { data: ownerRows } = await supabase
+        .from('club_owners').select('clubs(*)').eq('profile_id', prof.id)
+      const data = (ownerRows || []).map(r => r.clubs).filter(Boolean).sort((a, b) => a.name.localeCompare(b.name))
+      setAvailableClubs(data)
+      const own = data.find(c => c.id === prof.club_id) || data[0] || null
+      setActiveClub(prev => prev ? data.find(c => c.id === prev.id) || own : own)
     } else {
       // admin / staff — fixed to their club
       const club = prof.clubs || null
