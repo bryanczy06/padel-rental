@@ -20,6 +20,8 @@ export default function SuperDashboard() {
   const [saving, setSaving]       = useState(false)
 
   const [ownerOpen, setOwnerOpen] = useState(false)
+  const [ownerTab, setOwnerTab]   = useState('new') // 'new' | 'existing'
+  const [assignEmail, setAssignEmail] = useState('')
   const [clubForm, setClubForm]   = useState({ name: '', slug: '' })
   const [editForm, setEditForm]   = useState({ name: '', slug: '' })
   const [adminForm, setAdminForm] = useState({ full_name: '', email: '', password: '', phone: '' })
@@ -82,6 +84,28 @@ export default function SuperDashboard() {
     const { error } = await supabase.from('clubs').delete().eq('id', club.id)
     if (error) { toast(error.message, 'error'); return }
     toast(`${club.name} נמחק`)
+    load()
+  }
+
+  async function assignExistingOwner(e) {
+    e.preventDefault()
+    setSaving(true)
+    // find profile by email
+    const { data: existing } = await supabase
+      .from('profiles').select('id, full_name, role').eq('email', assignEmail.trim()).single()
+    if (!existing) { toast('משתמש לא נמצא עם המייל הזה', 'error'); setSaving(false); return }
+
+    // update role to owner if needed
+    if (existing.role !== 'owner' && existing.role !== 'super_admin') {
+      await supabase.from('profiles').update({ role: 'owner' }).eq('id', existing.id)
+    }
+    // link club to owner
+    const { error } = await supabase.from('clubs').update({ owner_id: existing.id }).eq('id', targetClub.id)
+    setSaving(false)
+    if (error) { toast(error.message, 'error'); return }
+    toast(`${existing.full_name} שויך כבעלים של ${targetClub.name}`)
+    setAssignEmail('')
+    setOwnerOpen(false)
     load()
   }
 
@@ -263,31 +287,59 @@ export default function SuperDashboard() {
         </form>
       </Modal>
 
-      {/* Create owner */}
-      <Modal open={ownerOpen} onClose={() => setOwnerOpen(false)} title={`הגדר בעלים — ${targetClub?.name}`}>
-        <form onSubmit={createOwner} className="flex flex-col gap-4">
-          <p className="text-sm text-gray-500 bg-amber-50 rounded-xl px-3 py-2">הבעלים יוכל לנהל את כל המועדונים שלו ולעבור ביניהם</p>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">שם מלא *</label>
-            <input required value={ownerForm.full_name} onChange={e => setOwnerForm(f => ({ ...f, full_name: e.target.value }))} className="input" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">מייל *</label>
-            <input required type="email" value={ownerForm.email} onChange={e => setOwnerForm(f => ({ ...f, email: e.target.value }))} className="input" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">טלפון</label>
-            <input type="tel" value={ownerForm.phone} onChange={e => setOwnerForm(f => ({ ...f, phone: e.target.value }))} className="input" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">סיסמה ראשונית *</label>
-            <input required type="password" minLength={6} value={ownerForm.password} onChange={e => setOwnerForm(f => ({ ...f, password: e.target.value }))} className="input" />
-          </div>
-          <div className="flex gap-3 mt-1">
-            <button type="button" onClick={() => setOwnerOpen(false)} className="btn-secondary flex-1">ביטול</button>
-            <button type="submit" disabled={saving} className="btn-primary flex-1">{saving ? 'יוצר...' : 'צור בעלים'}</button>
-          </div>
-        </form>
+      {/* Create/assign owner */}
+      <Modal open={ownerOpen} onClose={() => { setOwnerOpen(false); setOwnerTab('new') }} title={`הגדר בעלים — ${targetClub?.name}`}>
+        {/* Tabs */}
+        <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-4">
+          <button onClick={() => setOwnerTab('existing')}
+            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${ownerTab === 'existing' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>
+            שייך קיים
+          </button>
+          <button onClick={() => setOwnerTab('new')}
+            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${ownerTab === 'new' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>
+            צור חדש
+          </button>
+        </div>
+
+        {ownerTab === 'existing' ? (
+          <form onSubmit={assignExistingOwner} className="flex flex-col gap-4">
+            <p className="text-sm text-gray-500 bg-blue-50 rounded-xl px-3 py-2">הכנס מייל של משתמש קיים במערכת</p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">מייל הבעלים *</label>
+              <input required type="email" value={assignEmail}
+                onChange={e => setAssignEmail(e.target.value)}
+                className="input" placeholder="owner@example.com" />
+            </div>
+            <div className="flex gap-3 mt-1">
+              <button type="button" onClick={() => setOwnerOpen(false)} className="btn-secondary flex-1">ביטול</button>
+              <button type="submit" disabled={saving} className="btn-primary flex-1">{saving ? 'משייך...' : 'שייך'}</button>
+            </div>
+          </form>
+        ) : (
+          <form onSubmit={createOwner} className="flex flex-col gap-4">
+            <p className="text-sm text-gray-500 bg-amber-50 rounded-xl px-3 py-2">הבעלים יוכל לנהל את כל המועדונים שלו ולעבור ביניהם</p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">שם מלא *</label>
+              <input required value={ownerForm.full_name} onChange={e => setOwnerForm(f => ({ ...f, full_name: e.target.value }))} className="input" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">מייל *</label>
+              <input required type="email" value={ownerForm.email} onChange={e => setOwnerForm(f => ({ ...f, email: e.target.value }))} className="input" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">טלפון</label>
+              <input type="tel" value={ownerForm.phone} onChange={e => setOwnerForm(f => ({ ...f, phone: e.target.value }))} className="input" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">סיסמה ראשונית *</label>
+              <input required type="password" minLength={6} value={ownerForm.password} onChange={e => setOwnerForm(f => ({ ...f, password: e.target.value }))} className="input" />
+            </div>
+            <div className="flex gap-3 mt-1">
+              <button type="button" onClick={() => setOwnerOpen(false)} className="btn-secondary flex-1">ביטול</button>
+              <button type="submit" disabled={saving} className="btn-primary flex-1">{saving ? 'יוצר...' : 'צור בעלים'}</button>
+            </div>
+          </form>
+        )}
       </Modal>
 
       {/* Create admin */}
