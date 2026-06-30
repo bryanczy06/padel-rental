@@ -24,8 +24,8 @@ function StatusBadge({ status, t }) {
 }
 
 export default function Rackets() {
-  const { t }       = useTranslation()
-  const { profile } = useAuth()
+  const { t }                   = useTranslation()
+  const { profile, activeClub } = useAuth()
   const toast       = useToast()
   const [rackets, setRackets]   = useState([])
   const [loading, setLoading]   = useState(true)
@@ -36,18 +36,18 @@ export default function Rackets() {
 
   async function load() {
     const { data } = await supabase.from('rackets').select('*')
-      .eq('club_id', profile.club_id).order('created_at')
+      .eq('club_id', activeClub.id).order('created_at')
     setRackets(data || [])
     setLoading(false)
   }
 
-  useEffect(() => { if (profile?.club_id) load() }, [profile])
+  useEffect(() => { if (activeClub?.id) load() }, [activeClub?.id])
 
   async function addRacket(e) {
     e.preventDefault()
     setSaving(true)
     const { error } = await supabase.from('rackets').insert({
-      ...form, club_id: profile.club_id
+      ...form, club_id: activeClub.id
     })
     setSaving(false)
     if (error) { toast(t('common.error'), 'error'); return }

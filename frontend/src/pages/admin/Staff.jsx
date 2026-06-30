@@ -9,8 +9,8 @@ import Spinner from '../../components/Spinner'
 import { Plus, Trash2, UserCog, Phone, Mail, Shield } from 'lucide-react'
 
 export default function Staff() {
-  const { t }       = useTranslation()
-  const { profile } = useAuth()
+  const { t }                   = useTranslation()
+  const { profile, activeClub } = useAuth()
   const toast       = useToast()
   const [staff, setStaff]   = useState([])
   const [loading, setLoading] = useState(true)
@@ -20,12 +20,12 @@ export default function Staff() {
 
   async function load() {
     const { data } = await supabase.from('profiles').select('*')
-      .eq('club_id', profile.club_id).order('created_at')
+      .eq('club_id', activeClub.id).order('created_at')
     setStaff(data || [])
     setLoading(false)
   }
 
-  useEffect(() => { if (profile?.club_id) load() }, [profile])
+  useEffect(() => { if (activeClub?.id) load() }, [activeClub?.id])
 
   async function addStaff(e) {
     e.preventDefault()

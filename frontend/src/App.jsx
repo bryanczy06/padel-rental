@@ -15,8 +15,8 @@ import RentalHistory   from './pages/admin/RentalHistory'
 import Join            from './pages/customer/Join'
 import SuperDashboard  from './pages/super/SuperDashboard'
 
-const ADMIN = ['admin', 'super_admin']
-const ALL   = ['admin', 'super_admin', 'staff']
+const ADMIN = ['admin', 'super_admin', 'owner']
+const ALL   = ['admin', 'super_admin', 'owner', 'staff']
 
 export default function App() {
   return (

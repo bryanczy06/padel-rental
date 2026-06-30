@@ -7,21 +7,22 @@ import Spinner from '../../components/Spinner'
 import { Search, ClipboardList, CheckCircle2, AlertTriangle, Clock } from 'lucide-react'
 
 export default function RentalHistory() {
-  const { t }       = useTranslation()
-  const { profile } = useAuth()
+  const { t }                   = useTranslation()
+  const { profile, activeClub } = useAuth()
   const [rentals, setRentals] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch]   = useState('')
 
   useEffect(() => {
-    if (!profile?.club_id) return
+    if (!activeClub?.id) return
+    setLoading(true)
     supabase.from('rentals')
       .select('*, customers(full_name, phone), rackets(name, brand), profiles!rentals_rented_by_fkey(full_name)')
-      .eq('club_id', profile.club_id)
+      .eq('club_id', activeClub.id)
       .order('started_at', { ascending: false })
       .limit(200)
       .then(({ data }) => { setRentals(data || []); setLoading(false) })
-  }, [profile])
+  }, [activeClub?.id])
 
   const filtered = rentals.filter(r => {
     const q = search.toLowerCase()

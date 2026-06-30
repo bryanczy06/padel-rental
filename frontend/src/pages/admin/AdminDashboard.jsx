@@ -8,21 +8,22 @@ import { CircleDot, Users, Clock, TrendingUp, AlertTriangle } from 'lucide-react
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 
 export default function AdminDashboard() {
-  const { t }       = useTranslation()
-  const { profile } = useAuth()
+  const { t }                    = useTranslation()
+  const { profile, activeClub }  = useAuth()
   const [stats, setStats]     = useState(null)
   const [overdue, setOverdue] = useState([])
   const [chartData, setChart] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!profile?.club_id) return
+    if (!activeClub?.id) return
+    setLoading(true)
     async function load() {
       const [racketRes, rentalRes, todayRes] = await Promise.all([
-        supabase.from('rackets').select('status').eq('club_id', profile.club_id),
+        supabase.from('rackets').select('status').eq('club_id', activeClub.id),
         supabase.from('rentals').select('id, started_at, rackets(name), customers(full_name)')
-          .eq('club_id', profile.club_id).is('returned_at', null),
-        supabase.from('rentals').select('id').eq('club_id', profile.club_id)
+          .eq('club_id', activeClub.id).is('returned_at', null),
+        supabase.from('rentals').select('id').eq('club_id', activeClub.id)
           .gte('started_at', new Date().toISOString().slice(0, 10)),
       ])
 
@@ -39,7 +40,6 @@ export default function AdminDashboard() {
       const THREE_HOURS = 3 * 60 * 60 * 1000
       setOverdue(open.filter(r => Date.now() - new Date(r.started_at) > THREE_HOURS))
 
-      // last 7 days chart
       const days = []
       for (let i = 6; i >= 0; i--) {
         const d = new Date()
@@ -48,7 +48,7 @@ export default function AdminDashboard() {
         days.push({ date: d.toLocaleDateString('he-IL', { weekday: 'short' }), key })
       }
       const weekRes = await supabase.from('rentals').select('started_at')
-        .eq('club_id', profile.club_id)
+        .eq('club_id', activeClub.id)
         .gte('started_at', days[0].key)
       const counts = {}
       ;(weekRes.data || []).forEach(r => {
@@ -59,7 +59,7 @@ export default function AdminDashboard() {
       setLoading(false)
     }
     load()
-  }, [profile])
+  }, [activeClub?.id])
 
   if (loading) return <Layout><Spinner /></Layout>
 
@@ -76,7 +76,7 @@ export default function AdminDashboard() {
         <div>
           <p className="text-gray-500 text-sm">{t('dashboard.welcome')},</p>
           <h1 className="text-2xl font-bold text-gray-900">{profile?.full_name}</h1>
-          {profile?.clubs && <p className="text-sm text-gray-400 mt-0.5">{profile.clubs.name}</p>}
+          {activeClub && <p className="text-sm text-gray-400 mt-0.5">{activeClub.name}</p>}
         </div>
 
         {/* Stat cards */}
