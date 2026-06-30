@@ -21,7 +21,7 @@ export default function Navbar() {
   const isAdmin      = ['admin', 'super_admin', 'owner'].includes(profile?.role)
   const isSuperAdmin = profile?.role === 'super_admin'
   const isOwner      = profile?.role === 'owner'
-  const canSwitch    = isSuperAdmin || (isOwner && availableClubs.length > 1)
+  const canSwitch    = isSuperAdmin || availableClubs.length > 1
 
   const adminLinks = [
     { to: '/admin',           label: t('nav.dashboard'), icon: LayoutDashboard },

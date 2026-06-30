@@ -100,12 +100,17 @@ export default function Staff() {
     e.preventDefault()
     setSaving(true)
     const { data: existing } = await supabase
-      .from('profiles').select('id, full_name, role').eq('email', assignEmail.trim()).single()
+      .from('profiles').select('id, full_name, role, club_id').eq('email', assignEmail.trim()).single()
     if (!existing) { toast('משתמש לא נמצא עם המייל הזה', 'error'); setSaving(false); return }
-    const { error } = await supabase.from('profiles').update({ club_id: activeClub.id }).eq('id', existing.id)
+    // ensure home club is in staff_clubs
+    if (existing.club_id) {
+      await supabase.from('staff_clubs').upsert({ club_id: existing.club_id, profile_id: existing.id })
+    }
+    // add this club
+    const { error } = await supabase.from('staff_clubs').upsert({ club_id: activeClub.id, profile_id: existing.id })
     setSaving(false)
     if (error) { toast(error.message, 'error'); return }
-    toast(`${existing.full_name} שובץ למועדון זה`)
+    toast(`${existing.full_name} שובץ לסניף זה`)
     setAssignEmail('')
     setAddOpen(false)
     load()

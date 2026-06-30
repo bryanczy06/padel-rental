@@ -7,34 +7,41 @@ import { useToast } from '../../components/Toast'
 import Layout from '../../components/Layout'
 import QRScanner from '../../components/QRScanner'
 import Spinner from '../../components/Spinner'
-import { CheckCircle2, User, CircleDot, ChevronRight, Search, ArrowRight } from 'lucide-react'
+import { CheckCircle2, User, CircleDot, ChevronRight, Search, ArrowRight, AlertTriangle } from 'lucide-react'
 
 const STEP = { CUSTOMER: 1, RACKET: 2, CONFIRM: 3, DONE: 4 }
 
 export default function RentFlow() {
-  const { t }       = useTranslation()
-  const { profile } = useAuth()
-  const navigate    = useNavigate()
-  const toast       = useToast()
+  const { t }                    = useTranslation()
+  const { profile, activeClub }  = useAuth()
+  const navigate                 = useNavigate()
+  const toast                    = useToast()
 
-  const [step, setStep]         = useState(STEP.CUSTOMER)
-  const [customer, setCustomer] = useState(null)
-  const [racket, setRacket]     = useState(null)
-  const [loading, setLoading]   = useState(false)
-  const [error, setError]       = useState('')
-  const [search, setSearch]     = useState('')
-  const [searchRes, setSearchRes] = useState([])
-  const [searching, setSearching] = useState(false)
+  const [step, setStep]             = useState(STEP.CUSTOMER)
+  const [customer, setCustomer]     = useState(null)
+  const [racket, setRacket]         = useState(null)
+  const [loading, setLoading]       = useState(false)
+  const [error, setError]           = useState('')
+  const [search, setSearch]         = useState('')
+  const [searchRes, setSearchRes]   = useState([])
+  const [searching, setSearching]   = useState(false)
   const [showSearch, setShowSearch] = useState(false)
+  const [damagedWarn, setDamagedWarn] = useState(false)
+
+  async function checkAndSetCustomer(data) {
+    const { data: dmg } = await supabase.from('rentals')
+      .select('id').eq('customer_id', data.id).eq('condition', 'damaged').limit(1)
+    setCustomer(data)
+    if (dmg?.length) { setDamagedWarn(true) } else { setStep(STEP.RACKET) }
+    setError('')
+  }
 
   async function handleCustomerQR(code) {
     setLoading(true)
     const { data } = await supabase.from('customers').select('*').eq('qr_code', code).single()
     setLoading(false)
     if (!data) { setError('לא נמצא לקוח / Customer not found'); return }
-    setCustomer(data)
-    setStep(STEP.RACKET)
-    setError('')
+    await checkAndSetCustomer(data)
   }
 
   async function handleSearch(e) {
@@ -66,7 +73,7 @@ export default function RentFlow() {
   async function confirmRental() {
     setLoading(true)
     const { error: err } = await supabase.from('rentals').insert({
-      club_id:     profile.club_id,
+      club_id:     activeClub?.id || profile.club_id,
       customer_id: customer.id,
       racket_id:   racket.id,
       rented_by:   profile.id,
@@ -83,6 +90,31 @@ export default function RentFlow() {
 
   return (
     <Layout>
+      {/* Damaged customer warning */}
+      {damagedWarn && customer && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl flex flex-col gap-4">
+            <div className="h-14 w-14 rounded-full bg-red-100 flex items-center justify-center mx-auto">
+              <AlertTriangle size={28} className="text-red-500" />
+            </div>
+            <div className="text-center">
+              <h2 className="text-lg font-bold text-gray-900">שים לב!</h2>
+              <p className="text-gray-600 mt-1">
+                <span className="font-semibold">{customer.full_name}</span> החזיר בעבר מחבט שבור.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => { setDamagedWarn(false); setCustomer(null) }}
+                className="btn-secondary flex-1">ביטול</button>
+              <button onClick={() => { setDamagedWarn(false); setStep(STEP.RACKET) }}
+                className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors">
+                המשך בכל זאת
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-md mx-auto">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
@@ -132,7 +164,7 @@ export default function RentFlow() {
                   <button type="submit" className="btn-primary">{searching ? '...' : <Search size={16} />}</button>
                 </form>
                 {searchRes.map(c => (
-                  <button key={c.id} onClick={() => { setCustomer(c); setStep(STEP.RACKET); setError('') }}
+                  <button key={c.id} onClick={() => checkAndSetCustomer(c)}
                     className="card text-start hover:border-brand-200 border border-transparent transition-colors">
                     <p className="font-medium text-gray-900">{c.full_name}</p>
                     <p className="text-sm text-gray-500">{c.phone || c.email}</p>

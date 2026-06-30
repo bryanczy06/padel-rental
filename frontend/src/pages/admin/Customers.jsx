@@ -7,13 +7,14 @@ import Layout from '../../components/Layout'
 import Modal from '../../components/Modal'
 import QRCodeCard from '../../components/QRCodeCard'
 import Spinner from '../../components/Spinner'
-import { Plus, QrCode, Search, Users, Phone, Mail, ClipboardList, Trash2 } from 'lucide-react'
+import { Plus, QrCode, Search, Users, Phone, Mail, ClipboardList, Trash2, AlertTriangle } from 'lucide-react'
 
 export default function Customers() {
   const { t }       = useTranslation()
   const { profile } = useAuth()
   const toast       = useToast()
   const [customers, setCustomers] = useState([])
+  const [damagedIds, setDamagedIds] = useState(new Set())
   const [loading, setLoading]     = useState(true)
   const [search, setSearch]       = useState('')
   const [addOpen, setAddOpen]     = useState(false)
@@ -24,9 +25,12 @@ export default function Customers() {
   const [saving, setSaving]       = useState(false)
 
   async function load() {
-    const { data } = await supabase.from('customers').select('*')
-      .order('created_at', { ascending: false })
-    setCustomers(data || [])
+    const [{ data: custs }, { data: dmg }] = await Promise.all([
+      supabase.from('customers').select('*').order('created_at', { ascending: false }),
+      supabase.from('rentals').select('customer_id').eq('condition', 'damaged'),
+    ])
+    setCustomers(custs || [])
+    setDamagedIds(new Set((dmg || []).map(r => r.customer_id)))
     setLoading(false)
   }
 
@@ -87,15 +91,24 @@ export default function Customers() {
 
         {/* List */}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map(c => (
-            <div key={c.id} className="card flex flex-col gap-3">
+          {filtered.map(c => {
+            const isDamaged = damagedIds.has(c.id)
+            return (
+            <div key={c.id} className={`card flex flex-col gap-3 ${isDamaged ? 'border-red-200 bg-red-50/40' : ''}`}>
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 font-bold text-sm shrink-0">
+                  <div className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${isDamaged ? 'bg-red-100 text-red-700' : 'bg-brand-100 text-brand-700'}`}>
                     {c.full_name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900">{c.full_name}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-gray-900">{c.full_name}</p>
+                      {isDamaged && (
+                        <span className="flex items-center gap-1 text-xs text-red-600 bg-red-100 px-2 py-0.5 rounded-full font-medium">
+                          <AlertTriangle size={11} /> שבר מחבט
+                        </span>
+                      )}
+                    </div>
                     {c.phone && <p className="text-xs text-gray-500 flex items-center gap-1"><Phone size={11} /> {c.phone}</p>}
                     {c.email && <p className="text-xs text-gray-500 flex items-center gap-1"><Mail size={11} /> {c.email}</p>}
                   </div>
@@ -113,7 +126,7 @@ export default function Customers() {
                 </button>
               </div>
             </div>
-          ))}
+          )})
         </div>
 
         {filtered.length === 0 && (

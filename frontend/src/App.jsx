@@ -1,7 +1,42 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { AuthProvider } from './lib/AuthContext'
+import { AuthProvider, useAuth } from './lib/AuthContext'
 import { ToastProvider } from './components/Toast'
 import ProtectedRoute from './components/ProtectedRoute'
+import { Building2 } from 'lucide-react'
+
+function BranchPicker() {
+  const { profile, activeClub, availableClubs, switchClub } = useAuth()
+  if (!profile || activeClub || availableClubs.length <= 1) return null
+  return (
+    <div className="fixed inset-0 z-50 bg-gray-50 flex flex-col items-center justify-center p-6">
+      <div className="w-full max-w-sm flex flex-col gap-6">
+        <div className="text-center">
+          <div className="h-14 w-14 rounded-2xl bg-brand-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-brand-200">
+            <Building2 size={26} className="text-white" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900">באיזה סניף אתה היום?</h1>
+          <p className="text-sm text-gray-500 mt-1">שלום {profile.full_name}, בחר סניף להמשך</p>
+        </div>
+        <div className="flex flex-col gap-3">
+          {availableClubs.map(club => (
+            <button key={club.id} onClick={() => switchClub(club)}
+              className="card text-start hover:border-brand-300 border-2 border-transparent transition-all hover:shadow-md">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-brand-50 flex items-center justify-center shrink-0">
+                  <Building2 size={20} className="text-brand-600" />
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">{club.name}</p>
+                  {!club.active && <p className="text-xs text-red-400">מושבת</p>}
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 import Login           from './pages/Login'
 import StaffDashboard  from './pages/staff/StaffDashboard'
@@ -23,6 +58,7 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <ToastProvider>
+          <BranchPicker />
           <Routes>
             <Route path="/login" element={<Login />} />
 

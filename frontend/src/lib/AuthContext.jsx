@@ -27,11 +27,18 @@ export function AuthProvider({ children }) {
       const own = data.find(c => c.id === prof.club_id) || data[0] || null
       setActiveClub(prev => prev ? data.find(c => c.id === prev.id) || own : own)
     } else {
-      // admin / staff — fixed to their club
-      const club = prof.clubs || null
-      const clubObj = club ? { ...club, id: prof.club_id } : null
-      setAvailableClubs(clubObj ? [clubObj] : [])
-      setActiveClub(clubObj)
+      // admin / staff — check staff_clubs for multiple branches
+      const { data: clubRows } = await supabase
+        .from('staff_clubs').select('clubs(*)').eq('profile_id', prof.id)
+      const clubs = (clubRows || []).map(r => r.clubs).filter(Boolean)
+      if (clubs.length > 1) {
+        setAvailableClubs(clubs)
+        setActiveClub(prev => prev ? clubs.find(c => c.id === prev.id) || null : null)
+      } else {
+        const club = clubs[0] || (prof.clubs ? { ...prof.clubs, id: prof.club_id } : null)
+        setAvailableClubs(club ? [club] : [])
+        setActiveClub(club)
+      }
     }
   }
 
