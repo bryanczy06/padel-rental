@@ -6,7 +6,7 @@ import { useToast } from '../../components/Toast'
 import Layout from '../../components/Layout'
 import Modal from '../../components/Modal'
 import Spinner from '../../components/Spinner'
-import { Plus, Trash2, UserCog, Phone, Mail, Shield } from 'lucide-react'
+import { Plus, Trash2, UserCog, Phone, Shield, Crown } from 'lucide-react'
 
 export default function Staff() {
   const { t }                   = useTranslation()
@@ -46,6 +46,7 @@ export default function Staff() {
           password: form.password,
           phone: form.phone,
           role: form.role,
+          club_id: activeClub.id,
         }),
       }
     )
@@ -85,15 +86,16 @@ export default function Staff() {
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <div className={`h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0
-                    ${s.role === 'admin' ? 'bg-brand-100 text-brand-700' : 'bg-gray-100 text-gray-600'}`}>
+                    ${s.role === 'owner' ? 'bg-amber-100 text-amber-700' : s.role === 'admin' ? 'bg-brand-100 text-brand-700' : 'bg-gray-100 text-gray-600'}`}>
                     {s.full_name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900">{s.full_name}</p>
                     <div className="flex items-center gap-1">
-                      {s.role === 'admin' && <Shield size={11} className="text-brand-600" />}
+                      {s.role === 'owner'  && <Crown  size={11} className="text-amber-500" />}
+                      {s.role === 'admin'  && <Shield size={11} className="text-brand-600" />}
                       <p className="text-xs text-gray-500">
-                        {s.role === 'admin' ? t('staff.admin') : t('staff.staffRole')}
+                        {s.role === 'owner' ? 'בעלים' : s.role === 'admin' ? t('staff.admin') : t('staff.staffRole')}
                       </p>
                     </div>
                   </div>
