@@ -4,7 +4,7 @@ export async function getProfile() {
   try {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return null
-    const { data, error } = await supabase.from('profiles').select('*, clubs(name,slug)').eq('id', user.id).single()
+    const { data, error } = await supabase.from('profiles').select('*, clubs(name,slug,active)').eq('id', user.id).single()
     if (error) { console.warn('getProfile error:', error.message); return null }
     return data ?? null
   } catch (e) {
