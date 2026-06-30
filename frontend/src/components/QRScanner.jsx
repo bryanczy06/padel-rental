@@ -23,8 +23,8 @@ export default function QRScanner({ onResult, onClose }) {
             if (!cameras.length) { setError('לא נמצאה מצלמה'); setLoading(false); return }
             const cam = cameras.find(c => /back|rear|environment/i.test(c.label)) || cameras[cameras.length - 1]
             return scanner.current.start(
-              cam.id,
-              { fps: 10, qrbox: { width: 220, height: 220 } },
+              { facingMode: 'environment' },
+              { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1 },
               (text) => { onResult(text) },
               () => {}
             )
