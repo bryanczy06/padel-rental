@@ -1,8 +1,43 @@
 import { useEffect, useState } from 'react'
-import { useParams, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { CircleDot } from 'lucide-react'
 import QRCode from 'qrcode'
+
+const T = {
+  he: {
+    title: 'הרשמה',
+    subtitle: 'הירשם פעם אחת וקבל ברקוד קבוע',
+    name: 'שם מלא *',
+    namePh: 'ישראל ישראלי',
+    phone: 'טלפון',
+    email: 'מייל',
+    submit: 'הירשם וקבל ברקוד',
+    submitting: 'רושם...',
+    notFound: 'מועדון לא נמצא',
+    regError: 'שגיאה בהרשמה, נסה שוב',
+    hello: 'שלום',
+    qrSub: 'הברקוד שלך להשכרת מחבטים',
+    qrHint: 'הצג ברקוד זה בכניסה להשכרת מחבט',
+    notMe: 'זה לא אני — הירשם מחדש',
+  },
+  en: {
+    title: 'Sign Up',
+    subtitle: 'Register once and get your permanent QR code',
+    name: 'Full Name *',
+    namePh: 'John Smith',
+    phone: 'Phone',
+    email: 'Email',
+    submit: 'Register & Get QR Code',
+    submitting: 'Registering...',
+    notFound: 'Club not found',
+    regError: 'Registration error, please try again',
+    hello: 'Hello',
+    qrSub: 'Your racket rental QR code',
+    qrHint: 'Show this code at the counter to rent a racket',
+    notMe: "Not me — register again",
+  },
+}
 
 const STORAGE_KEY = 'padel_customer_id'
 
@@ -10,6 +45,8 @@ export default function Join() {
   const [searchParams] = useSearchParams()
   const clubSlug = searchParams.get('club') || 'default'
 
+  const [lang, setLang]       = useState('he')
+  const t = T[lang]
   const [step, setStep]       = useState('loading') // loading | register | qr
   const [form, setForm]       = useState({ full_name: '', phone: '', email: '' })
   const [customer, setCustomer] = useState(null)
@@ -54,7 +91,7 @@ export default function Join() {
       .from('clubs').select('id').eq('slug', clubSlug).single()
 
     if (!clubData) {
-      setError('מועדון לא נמצא')
+      setError(t.notFound)
       setSaving(false)
       return
     }
@@ -65,7 +102,7 @@ export default function Join() {
       .select().single()
 
     setSaving(false)
-    if (err) { setError('שגיאה בהרשמה, נסה שוב'); return }
+    if (err) { setError(t.regError); return }
 
     localStorage.setItem(STORAGE_KEY, data.id)
     setCustomer(data)
@@ -83,8 +120,16 @@ export default function Join() {
   }
 
   return (
-    <div className="min-h-dvh bg-gray-50 flex flex-col items-center justify-center px-4 py-10">
+    <div className="min-h-dvh bg-gray-50 flex flex-col items-center justify-center px-4 py-10" dir={lang === 'he' ? 'rtl' : 'ltr'}>
       <div className="w-full max-w-sm">
+        {/* Language toggle */}
+        <div className="flex justify-end mb-4">
+          <button onClick={() => setLang(l => l === 'he' ? 'en' : 'he')}
+            className="text-xs font-medium px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50">
+            {lang === 'he' ? 'EN' : 'עב'}
+          </button>
+        </div>
+
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
           <div className="h-14 w-14 rounded-2xl bg-brand-600 flex items-center justify-center shadow-lg shadow-brand-200 mb-3">
@@ -95,30 +140,30 @@ export default function Join() {
 
         {step === 'register' && (
           <div className="card">
-            <h2 className="text-lg font-bold text-gray-900 mb-1 text-center">הרשמה</h2>
-            <p className="text-sm text-gray-500 text-center mb-5">הירשם פעם אחת וקבל ברקוד קבוע</p>
+            <h2 className="text-lg font-bold text-gray-900 mb-1 text-center">{t.title}</h2>
+            <p className="text-sm text-gray-500 text-center mb-5">{t.subtitle}</p>
             <form onSubmit={handleRegister} className="flex flex-col gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">שם מלא *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">{t.name}</label>
                 <input required value={form.full_name}
                   onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))}
-                  className="input" placeholder="ישראל ישראלי" />
+                  className="input" placeholder={t.namePh} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">טלפון</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">{t.phone}</label>
                 <input type="tel" value={form.phone}
                   onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
                   className="input" placeholder="050-0000000" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">מייל</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">{t.email}</label>
                 <input type="email" value={form.email}
                   onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                   className="input" placeholder="you@example.com" />
               </div>
               {error && <p className="text-sm text-red-500 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
               <button type="submit" disabled={saving} className="btn-primary w-full mt-1">
-                {saving ? 'רושם...' : 'הירשם וקבל ברקוד'}
+                {saving ? t.submitting : t.submit}
               </button>
             </form>
           </div>
@@ -127,14 +172,14 @@ export default function Join() {
         {step === 'qr' && customer && (
           <div className="card flex flex-col items-center gap-5">
             <div className="text-center">
-              <p className="text-lg font-bold text-gray-900">שלום, {customer.full_name}!</p>
-              <p className="text-sm text-gray-500 mt-1">הברקוד שלך להשכרת מחבטים</p>
+              <p className="text-lg font-bold text-gray-900">{t.hello}, {customer.full_name}!</p>
+              <p className="text-sm text-gray-500 mt-1">{t.qrSub}</p>
             </div>
             <div className="bg-white p-3 rounded-2xl shadow-sm border border-gray-100">
               <img src={qrUrl} alt="QR Code" className="w-64 h-64" />
             </div>
             <div className="bg-brand-50 rounded-xl px-4 py-3 text-center w-full">
-              <p className="text-xs text-brand-700 font-medium">הצג ברקוד זה בכניסה להשכרת מחבט</p>
+              <p className="text-xs text-brand-700 font-medium">{t.qrHint}</p>
             </div>
             <button
               onClick={() => {
@@ -145,7 +190,7 @@ export default function Join() {
               }}
               className="text-xs text-gray-400 underline"
             >
-              זה לא אני — הירשם מחדש
+              {t.notMe}
             </button>
           </div>
         )}
