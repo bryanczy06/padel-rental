@@ -86,16 +86,6 @@ export default function Join() {
     setSaving(true)
     setError('')
 
-    // Get club_id
-    const { data: clubData } = await supabase
-      .from('clubs').select('id').eq('slug', clubSlug).single()
-
-    if (!clubData) {
-      setError(t.notFound)
-      setSaving(false)
-      return
-    }
-
     const { data, error: err } = await supabase
       .from('customers')
       .insert({ full_name: form.full_name, phone: form.phone, email: form.email })
