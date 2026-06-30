@@ -13,25 +13,28 @@ export default function QRScanner({ onResult, onClose }) {
 
   function startScanner() {
     setLoading(true)
+    setStarted(true)  // show div first so html5-qrcode can find it
     setError(null)
-    try {
-      scanner.current = new Html5Qrcode(id.current)
-      Html5Qrcode.getCameras()
-        .then(cameras => {
-          if (!cameras.length) { setError('לא נמצאה מצלמה'); setLoading(false); return }
-          const cam = cameras.find(c => /back|rear|environment/i.test(c.label)) || cameras[cameras.length - 1]
-          return scanner.current.start(
-            cam.id,
-            { fps: 10, qrbox: { width: 220, height: 220 } },
-            (text) => { onResult(text) },
-            () => {}
-          )
-        })
-        .then(() => { setStarted(true); setLoading(false) })
-        .catch(e => { setError(e.message || 'שגיאת מצלמה'); setLoading(false) })
-    } catch(e) {
-      setError(e.message || 'שגיאה'); setLoading(false)
-    }
+    setTimeout(() => {
+      try {
+        scanner.current = new Html5Qrcode(id.current)
+        Html5Qrcode.getCameras()
+          .then(cameras => {
+            if (!cameras.length) { setError('לא נמצאה מצלמה'); setLoading(false); return }
+            const cam = cameras.find(c => /back|rear|environment/i.test(c.label)) || cameras[cameras.length - 1]
+            return scanner.current.start(
+              cam.id,
+              { fps: 10, qrbox: { width: 220, height: 220 } },
+              (text) => { onResult(text) },
+              () => {}
+            )
+          })
+          .then(() => { setLoading(false) })
+          .catch(e => { setError(e.message || 'שגיאת מצלמה'); setLoading(false); setStarted(false) })
+      } catch(e) {
+        setError(e.message || 'שגיאה'); setLoading(false); setStarted(false)
+      }
+    }, 100)
   }
 
   useEffect(() => {
