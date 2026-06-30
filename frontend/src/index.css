@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+  body {
+    @apply bg-gray-50 text-gray-900 font-sans antialiased;
+    min-height: 100dvh;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl
+           bg-brand-600 text-white font-medium text-sm
+           hover:bg-brand-700 active:scale-95
+           transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl
+           bg-white text-gray-700 font-medium text-sm border border-gray-200
+           hover:bg-gray-50 active:scale-95
+           transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl
+           bg-red-50 text-red-600 font-medium text-sm border border-red-100
+           hover:bg-red-100 active:scale-95
+           transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-5;
+  }
+  .input {
+    @apply w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white
+           text-sm text-gray-900 placeholder-gray-400
+           focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
+           transition duration-150;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  .badge-green  { @apply badge bg-brand-100 text-brand-700; }
+  .badge-amber  { @apply badge bg-amber-100 text-amber-700; }
+  .badge-red    { @apply badge bg-red-100 text-red-600; }
+  .badge-gray   { @apply badge bg-gray-100 text-gray-600; }
+}
+
+/* RTL-aware flip for icons that indicate direction */
+[dir="ltr"] .rtl-flip { transform: scaleX(-1); }
+
+/* QR scanner overlay */
+#qr-reader { border: none !important; }
+#qr-reader video { border-radius: 1rem; }
+#qr-reader__scan_region { border-radius: 1rem; overflow: hidden; }
+#qr-reader__dashboard_section_csr button {
+  @apply btn-primary mt-2 !important;
+}
