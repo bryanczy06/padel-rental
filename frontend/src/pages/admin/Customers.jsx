@@ -129,7 +129,7 @@ export default function Customers() {
                 </button>
               </div>
             </div>
-          )})
+          )})}
         </div>
 
         {filtered.length === 0 && (
