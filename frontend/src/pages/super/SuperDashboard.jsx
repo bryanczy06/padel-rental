@@ -32,12 +32,13 @@ export default function SuperDashboard() {
     if (!clubsData) { setLoading(false); return }
 
     const enriched = await Promise.all(clubsData.map(async (club) => {
-      const [{ count: staffCount }, { count: racketCount }, { count: activeRentals }] = await Promise.all([
+      const [{ count: staffCount }, { count: racketCount }, { count: activeRentals }, { data: ownerData }] = await Promise.all([
         supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('club_id', club.id),
         supabase.from('rackets').select('*', { count: 'exact', head: true }).eq('club_id', club.id),
         supabase.from('rentals').select('*', { count: 'exact', head: true }).eq('club_id', club.id).is('returned_at', null),
+        supabase.from('profiles').select('full_name, email').eq('id', club.owner_id).single(),
       ])
-      return { ...club, staffCount, racketCount, activeRentals }
+      return { ...club, staffCount, racketCount, activeRentals, ownerName: ownerData?.full_name, ownerEmail: ownerData?.email }
     }))
 
     setClubs(enriched)
@@ -194,7 +195,14 @@ export default function SuperDashboard() {
                 </div>
                 {!club.active && <span className="badge badge-red shrink-0">מושבת</span>}
               </div>
-
+              {club.ownerName ? (
+                <div className="flex items-center gap-1.5 px-1">
+                  <Crown size={12} className="text-amber-500 shrink-0" />
+                  <p className="text-xs text-gray-500 truncate">{club.ownerName}</p>
+                </div>
+              ) : (
+                <p className="text-xs text-gray-400 px-1 italic">אין בעלים מוגדר</p>
+              )}
               <div className="grid grid-cols-3 gap-2">
                 <div className="bg-gray-50 rounded-xl p-2 text-center">
                   <UserCog size={14} className="mx-auto text-gray-400 mb-1" />

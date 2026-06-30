@@ -35,9 +35,16 @@ export default function Staff() {
 
   async function load() {
     if (!activeClub?.id) return
-    const { data } = await supabase.from('profiles').select('*')
-      .eq('club_id', activeClub.id).order('created_at')
-    setStaff(data || [])
+    const [{ data: staffData }, { data: clubData }] = await Promise.all([
+      supabase.from('profiles').select('*').eq('club_id', activeClub.id).order('created_at'),
+      supabase.from('clubs').select('owner_id, profiles!clubs_owner_id_fkey(*)').eq('id', activeClub.id).single(),
+    ])
+    const list = [...(staffData || [])]
+    const owner = clubData?.profiles
+    if (owner && !list.find(s => s.id === owner.id)) {
+      list.unshift(owner)
+    }
+    setStaff(list)
     setLoading(false)
   }
 
