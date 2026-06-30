@@ -7,7 +7,7 @@ import Layout from '../../components/Layout'
 import Modal from '../../components/Modal'
 import QRCodeCard from '../../components/QRCodeCard'
 import Spinner from '../../components/Spinner'
-import { Plus, QrCode, Search, Users, Phone, Mail, ClipboardList } from 'lucide-react'
+import { Plus, QrCode, Search, Users, Phone, Mail, ClipboardList, Trash2 } from 'lucide-react'
 
 export default function Customers() {
   const { t }       = useTranslation()
@@ -47,6 +47,12 @@ export default function Customers() {
     toast(t('customers.addSuccess'))
     setForm({ full_name: '', email: '', phone: '' })
     setAddOpen(false)
+    load()
+  }
+
+  async function deleteCustomer(id, name) {
+    if (!confirm(`למחוק את "${name}"?`)) return
+    await supabase.from('customers').delete().eq('id', id)
     load()
   }
 
@@ -101,6 +107,9 @@ export default function Customers() {
                 </button>
                 <button onClick={() => openHistory(c)} className="btn-secondary text-xs py-1.5 px-3">
                   <ClipboardList size={13} /> {t('customers.viewHistory')}
+                </button>
+                <button onClick={() => deleteCustomer(c.id, c.full_name)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors ms-auto">
+                  <Trash2 size={15} />
                 </button>
               </div>
             </div>

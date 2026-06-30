@@ -7,7 +7,7 @@ import Layout from '../../components/Layout'
 import Modal from '../../components/Modal'
 import QRCodeCard from '../../components/QRCodeCard'
 import Spinner from '../../components/Spinner'
-import { Plus, QrCode, Wrench, Check, CircleDot } from 'lucide-react'
+import { Plus, QrCode, Wrench, Check, CircleDot, Trash2 } from 'lucide-react'
 
 function StatusBadge({ status, t }) {
   const map = {
@@ -62,6 +62,12 @@ export default function Rackets() {
     load()
   }
 
+  async function deleteRacket(id, name) {
+    if (!confirm(`למחוק את "${name}"?`)) return
+    await supabase.from('rackets').delete().eq('id', id)
+    load()
+  }
+
   if (loading) return <Layout><Spinner /></Layout>
 
   return (
@@ -105,6 +111,9 @@ export default function Rackets() {
                     <Check size={13} /> {t('rackets.markAvailable')}
                   </button>
                 )}
+                <button onClick={() => deleteRacket(r.id, r.name)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors ms-auto">
+                  <Trash2 size={15} />
+                </button>
               </div>
             </div>
           ))}
