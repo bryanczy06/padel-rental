@@ -18,23 +18,21 @@ export default function Login() {
     setError('')
     setLoading(true)
     const { data, error: err } = await signIn(email, password)
-    setLoading(false)
-    if (err) { setError(t('auth.error')); return }
+    if (err) { setLoading(false); setError(err.message || t('auth.error')); return }
 
-    // Try to fetch profile and route accordingly, fallback to /staff
     try {
       const { supabase } = await import('../lib/supabase')
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { navigate('/staff'); return }
-      const { data: profile } = await supabase
+      if (!user) { setLoading(false); setError('לא נמצא משתמש, נסה שוב'); return }
+      const { data: profile, error: profileErr } = await supabase
         .from('profiles').select('role').eq('id', user.id).single()
-      if (profile?.role === 'staff') {
-        navigate('/staff')
-      } else {
-        navigate('/admin')
-      }
-    } catch {
-      navigate('/staff')
+      setLoading(false)
+      if (profileErr) { setError('שגיאה בטעינת הפרופיל: ' + profileErr.message); return }
+      if (!profile) { setError('פרופיל לא נמצא - פנה למנהל'); return }
+      navigate(profile.role === 'staff' ? '/staff' : '/admin')
+    } catch (ex) {
+      setLoading(false)
+      setError('שגיאה: ' + ex.message)
     }
   }
 
