@@ -6,26 +6,52 @@ import { useToast } from '../../components/Toast'
 import Layout from '../../components/Layout'
 import Modal from '../../components/Modal'
 import Spinner from '../../components/Spinner'
-import { Plus, Trash2, UserCog, Phone, Shield, Crown } from 'lucide-react'
+import { Plus, Trash2, UserCog, Phone, Shield, Crown, Pencil } from 'lucide-react'
+
+function roleBadge(role) {
+  if (role === 'owner')      return { label: 'בעלים',  icon: Crown,  color: 'bg-amber-100 text-amber-700',  iconColor: 'text-amber-500' }
+  if (role === 'admin')      return { label: 'מנהל',   icon: Shield, color: 'bg-brand-100 text-brand-700',  iconColor: 'text-brand-600' }
+  if (role === 'super_admin') return { label: 'סופר אדמין', icon: Shield, color: 'bg-purple-100 text-purple-700', iconColor: 'text-purple-600' }
+  return                            { label: 'עובד',   icon: null,   color: 'bg-gray-100 text-gray-600',    iconColor: '' }
+}
 
 export default function Staff() {
-  const { t }                   = useTranslation()
-  const { profile, activeClub } = useAuth()
-  const toast       = useToast()
-  const [staff, setStaff]   = useState([])
-  const [loading, setLoading] = useState(true)
-  const [addOpen, setAddOpen] = useState(false)
-  const [form, setForm]     = useState({ full_name: '', email: '', phone: '', password: '', role: 'staff' })
-  const [saving, setSaving] = useState(false)
+  const { t }                            = useTranslation()
+  const { profile, activeClub, availableClubs } = useAuth()
+  const toast                            = useToast()
+  const isSuperAdmin = profile?.role === 'super_admin'
+  const isOwner      = profile?.role === 'owner'
+  const canManageClubs = isSuperAdmin || isOwner
+
+  const [staff, setStaff]       = useState([])
+  const [allClubs, setAllClubs] = useState([])
+  const [loading, setLoading]   = useState(true)
+  const [addOpen, setAddOpen]   = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
+  const [editTarget, setEditTarget] = useState(null)
+  const [form, setForm]         = useState({ full_name: '', email: '', phone: '', password: '', role: 'staff' })
+  const [editForm, setEditForm] = useState({ role: 'staff', club_id: '' })
+  const [saving, setSaving]     = useState(false)
 
   async function load() {
+    if (!activeClub?.id) return
     const { data } = await supabase.from('profiles').select('*')
       .eq('club_id', activeClub.id).order('created_at')
     setStaff(data || [])
     setLoading(false)
   }
 
-  useEffect(() => { if (activeClub?.id) load() }, [activeClub?.id])
+  useEffect(() => {
+    if (activeClub?.id) load()
+  }, [activeClub?.id])
+
+  useEffect(() => {
+    // load clubs for the club-transfer dropdown
+    if (canManageClubs) {
+      if (availableClubs.length) { setAllClubs(availableClubs); return }
+      supabase.from('clubs').select('id, name').order('name').then(({ data }) => setAllClubs(data || []))
+    }
+  }, [availableClubs])
 
   async function addStaff(e) {
     e.preventDefault()
@@ -52,13 +78,23 @@ export default function Staff() {
     )
     const json = await res.json()
     setSaving(false)
-    if (!res.ok || json.error) {
-      toast(json.error || t('common.error'), 'error')
-      return
-    }
+    if (!res.ok || json.error) { toast(json.error || t('common.error'), 'error'); return }
     toast(t('staff.addSuccess'))
     setAddOpen(false)
     setForm({ full_name: '', email: '', phone: '', password: '', role: 'staff' })
+    load()
+  }
+
+  async function saveEdit(e) {
+    e.preventDefault()
+    setSaving(true)
+    const updates = { role: editForm.role }
+    if (canManageClubs && editForm.club_id) updates.club_id = editForm.club_id
+    const { error } = await supabase.from('profiles').update(updates).eq('id', editTarget.id)
+    setSaving(false)
+    if (error) { toast(error.message, 'error'); return }
+    toast('עובד עודכן')
+    setEditOpen(false)
     load()
   }
 
@@ -66,6 +102,12 @@ export default function Staff() {
     if (!confirm(t('staff.removeConfirm'))) return
     await supabase.from('profiles').delete().eq('id', id)
     load()
+  }
+
+  function openEdit(s) {
+    setEditTarget(s)
+    setEditForm({ role: s.role, club_id: s.club_id || activeClub.id })
+    setEditOpen(true)
   }
 
   if (loading) return <Layout><Spinner /></Layout>
@@ -81,34 +123,41 @@ export default function Staff() {
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {staff.map(s => (
-            <div key={s.id} className="card flex flex-col gap-3">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={`h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0
-                    ${s.role === 'owner' ? 'bg-amber-100 text-amber-700' : s.role === 'admin' ? 'bg-brand-100 text-brand-700' : 'bg-gray-100 text-gray-600'}`}>
-                    {s.full_name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">{s.full_name}</p>
-                    <div className="flex items-center gap-1">
-                      {s.role === 'owner'  && <Crown  size={11} className="text-amber-500" />}
-                      {s.role === 'admin'  && <Shield size={11} className="text-brand-600" />}
-                      <p className="text-xs text-gray-500">
-                        {s.role === 'owner' ? 'בעלים' : s.role === 'admin' ? t('staff.admin') : t('staff.staffRole')}
-                      </p>
+          {staff.map(s => {
+            const rb = roleBadge(s.role)
+            const RIcon = rb.icon
+            return (
+              <div key={s.id} className="card flex flex-col gap-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${rb.color}`}>
+                      {s.full_name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-gray-900 truncate">{s.full_name}</p>
+                      <div className="flex items-center gap-1">
+                        {RIcon && <RIcon size={11} className={rb.iconColor} />}
+                        <p className="text-xs text-gray-500">{rb.label}</p>
+                      </div>
                     </div>
                   </div>
+                  <div className="flex gap-1 shrink-0">
+                    <button onClick={() => openEdit(s)}
+                      className="p-1.5 text-gray-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors">
+                      <Pencil size={14} />
+                    </button>
+                    {s.id !== profile.id && (
+                      <button onClick={() => removeStaff(s.id)}
+                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                        <Trash2 size={14} />
+                      </button>
+                    )}
+                  </div>
                 </div>
-                {s.id !== profile.id && (
-                  <button onClick={() => removeStaff(s.id)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                    <Trash2 size={15} />
-                  </button>
-                )}
+                {s.phone && <p className="text-xs text-gray-500 flex items-center gap-1"><Phone size={11} /> {s.phone}</p>}
               </div>
-              {s.phone && <p className="text-xs text-gray-500 flex items-center gap-1"><Phone size={11} /> {s.phone}</p>}
-            </div>
-          ))}
+            )
+          })}
         </div>
 
         {staff.length === 0 && (
@@ -119,27 +168,24 @@ export default function Staff() {
         )}
       </div>
 
+      {/* Add staff modal */}
       <Modal open={addOpen} onClose={() => setAddOpen(false)} title={t('staff.add')}>
         <form onSubmit={addStaff} className="flex flex-col gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('staff.fullName')} *</label>
-            <input required value={form.full_name} onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))}
-              className="input" />
+            <input required value={form.full_name} onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))} className="input" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('staff.email')} *</label>
-            <input required type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-              className="input" />
+            <input required type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className="input" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('staff.phone')}</label>
-            <input type="tel" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-              className="input" />
+            <input type="tel" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} className="input" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('staff.password')} *</label>
-            <input required type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-              className="input" minLength={6} />
+            <input required type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} className="input" minLength={6} />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('staff.role')}</label>
@@ -152,6 +198,36 @@ export default function Staff() {
             <button type="button" onClick={() => setAddOpen(false)} className="btn-secondary flex-1">{t('common.cancel')}</button>
             <button type="submit" disabled={saving} className="btn-primary flex-1">
               {saving ? t('common.loading') : t('staff.saveBtn')}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Edit staff modal */}
+      <Modal open={editOpen} onClose={() => setEditOpen(false)} title={`עריכה — ${editTarget?.full_name}`}>
+        <form onSubmit={saveEdit} className="flex flex-col gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">תפקיד</label>
+            <select value={editForm.role} onChange={e => setEditForm(f => ({ ...f, role: e.target.value }))} className="input">
+              <option value="staff">עובד</option>
+              <option value="admin">מנהל</option>
+              <option value="owner">בעלים</option>
+            </select>
+          </div>
+          {canManageClubs && allClubs.length > 1 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">מועדון</label>
+              <select value={editForm.club_id} onChange={e => setEditForm(f => ({ ...f, club_id: e.target.value }))} className="input">
+                {allClubs.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          <div className="flex gap-3 mt-1">
+            <button type="button" onClick={() => setEditOpen(false)} className="btn-secondary flex-1">ביטול</button>
+            <button type="submit" disabled={saving} className="btn-primary flex-1">
+              {saving ? 'שומר...' : 'שמור'}
             </button>
           </div>
         </form>
