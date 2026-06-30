@@ -28,10 +28,10 @@ export default function Login() {
       if (!user) { navigate('/staff'); return }
       const { data: profile } = await supabase
         .from('profiles').select('role').eq('id', user.id).single()
-      if (profile?.role === 'admin' || profile?.role === 'super_admin') {
-        navigate('/admin')
-      } else {
+      if (profile?.role === 'staff') {
         navigate('/staff')
+      } else {
+        navigate('/admin')
       }
     } catch {
       navigate('/staff')
