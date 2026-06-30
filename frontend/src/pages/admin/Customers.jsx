@@ -10,8 +10,8 @@ import Spinner from '../../components/Spinner'
 import { Plus, QrCode, Search, Users, Phone, Mail, ClipboardList, Trash2, AlertTriangle } from 'lucide-react'
 
 export default function Customers() {
-  const { t }       = useTranslation()
-  const { profile } = useAuth()
+  const { t }                    = useTranslation()
+  const { profile, activeClub }  = useAuth()
   const toast       = useToast()
   const [customers, setCustomers] = useState([])
   const [damagedIds, setDamagedIds] = useState(new Set())
@@ -25,16 +25,19 @@ export default function Customers() {
   const [saving, setSaving]       = useState(false)
 
   async function load() {
+    const clubId = activeClub?.id || profile?.club_id
     const [{ data: custs }, { data: dmg }] = await Promise.all([
       supabase.from('customers').select('*').order('created_at', { ascending: false }),
-      supabase.from('rentals').select('customer_id').eq('condition', 'damaged'),
+      clubId
+        ? supabase.from('rentals').select('customer_id').eq('condition', 'damaged').eq('club_id', clubId)
+        : supabase.from('rentals').select('customer_id').eq('condition', 'damaged'),
     ])
     setCustomers(custs || [])
     setDamagedIds(new Set((dmg || []).map(r => r.customer_id)))
     setLoading(false)
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [activeClub?.id])
 
   const filtered = customers.filter(c => {
     const q = search.toLowerCase()

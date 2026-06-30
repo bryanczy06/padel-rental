@@ -29,8 +29,9 @@ export default function RentFlow() {
   const [damagedWarn, setDamagedWarn] = useState(false)
 
   async function checkAndSetCustomer(data) {
-    const { data: dmg } = await supabase.from('rentals')
-      .select('id').eq('customer_id', data.id).eq('condition', 'damaged').limit(1)
+    const clubId = activeClub?.id || profile?.club_id
+    const q = supabase.from('rentals').select('id').eq('customer_id', data.id).eq('condition', 'damaged')
+    const { data: dmg } = clubId ? await q.eq('club_id', clubId).limit(1) : await q.limit(1)
     setCustomer(data)
     if (dmg?.length) { setDamagedWarn(true) } else { setStep(STEP.RACKET) }
     setError('')
