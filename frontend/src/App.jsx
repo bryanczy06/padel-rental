@@ -48,6 +48,7 @@ import Customers       from './pages/admin/Customers'
 import Staff           from './pages/admin/Staff'
 import RentalHistory   from './pages/admin/RentalHistory'
 import Join            from './pages/customer/Join'
+import MyQR           from './pages/customer/MyQR'
 import SuperDashboard  from './pages/super/SuperDashboard'
 
 const ADMIN = ['admin', 'super_admin', 'owner']
@@ -92,6 +93,7 @@ export default function App() {
 
             {/* Customer self-registration */}
             <Route path="/join" element={<Join />} />
+            <Route path="/my-qr" element={<MyQR />} />
 
             {/* Super admin */}
             <Route path="/super" element={
