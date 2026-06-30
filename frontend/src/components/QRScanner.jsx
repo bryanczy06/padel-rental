@@ -41,7 +41,7 @@ export default function QRScanner({ onResult, onClose }) {
   return (
     <div className="flex flex-col items-center gap-4">
       {/* scanner container always in DOM so html5-qrcode can find the element */}
-      <div id={id.current} className={`w-full rounded-xl overflow-hidden ${started ? '' : 'hidden'}`} />
+      <div id={id.current} style={{ minHeight: started ? 280 : 0 }} className={`w-full rounded-xl overflow-hidden ${started ? '' : 'hidden'}`} />
 
       {!started && !error && (
         <button onClick={startScanner} disabled={loading}
