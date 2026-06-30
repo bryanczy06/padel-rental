@@ -5,7 +5,7 @@ import { useToast } from '../../components/Toast'
 import Layout from '../../components/Layout'
 import Modal from '../../components/Modal'
 import Spinner from '../../components/Spinner'
-import { Plus, Building2, Users, CircleDot, UserCog, ShieldCheck, Pencil, Trash2, ToggleLeft, ToggleRight } from 'lucide-react'
+import { Plus, Building2, Users, CircleDot, UserCog, ShieldCheck, Pencil, Trash2, ToggleLeft, ToggleRight, Crown } from 'lucide-react'
 
 export default function SuperDashboard() {
   const { profile } = useAuth()
@@ -19,9 +19,11 @@ export default function SuperDashboard() {
   const [targetClub, setTargetClub] = useState(null)
   const [saving, setSaving]       = useState(false)
 
+  const [ownerOpen, setOwnerOpen] = useState(false)
   const [clubForm, setClubForm]   = useState({ name: '', slug: '' })
   const [editForm, setEditForm]   = useState({ name: '', slug: '' })
   const [adminForm, setAdminForm] = useState({ full_name: '', email: '', password: '', phone: '' })
+  const [ownerForm, setOwnerForm] = useState({ full_name: '', email: '', password: '', phone: '' })
 
   async function load() {
     const { data: clubsData } = await supabase.from('clubs').select('*').order('created_at')
@@ -80,6 +82,34 @@ export default function SuperDashboard() {
     const { error } = await supabase.from('clubs').delete().eq('id', club.id)
     if (error) { toast(error.message, 'error'); return }
     toast(`${club.name} נמחק`)
+    load()
+  }
+
+  async function createOwner(e) {
+    e.preventDefault()
+    setSaving(true)
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-staff-user`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ ...ownerForm, role: 'owner', club_id: targetClub.id }),
+      }
+    )
+    const json = await res.json()
+    if (!res.ok || json.error) { setSaving(false); toast(json.error || 'שגיאה', 'error'); return }
+
+    // set as club owner_id
+    await supabase.from('clubs').update({ owner_id: json.user_id }).eq('id', targetClub.id)
+    setSaving(false)
+    toast(`בעלים נוצר למועדון ${targetClub.name}`)
+    setOwnerForm({ full_name: '', email: '', password: '', phone: '' })
+    setOwnerOpen(false)
     load()
   }
 
@@ -160,6 +190,10 @@ export default function SuperDashboard() {
               </div>
 
               <div className="flex gap-2 flex-wrap mt-auto">
+                <button onClick={() => { setTargetClub(club); setOwnerForm({ full_name: '', email: '', password: '', phone: '' }); setOwnerOpen(true) }}
+                  className="btn-secondary text-xs py-1.5 flex-1">
+                  <Crown size={13} /> בעלים
+                </button>
                 <button onClick={() => { setTargetClub(club); setAdminForm({ full_name: '', email: '', password: '', phone: '' }); setAdminOpen(true) }}
                   className="btn-secondary text-xs py-1.5 flex-1">
                   <UserCog size={13} /> אדמין
@@ -225,6 +259,33 @@ export default function SuperDashboard() {
           <div className="flex gap-3 mt-1">
             <button type="button" onClick={() => setEditOpen(false)} className="btn-secondary flex-1">ביטול</button>
             <button type="submit" disabled={saving} className="btn-primary flex-1">{saving ? 'שומר...' : 'שמור'}</button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Create owner */}
+      <Modal open={ownerOpen} onClose={() => setOwnerOpen(false)} title={`הגדר בעלים — ${targetClub?.name}`}>
+        <form onSubmit={createOwner} className="flex flex-col gap-4">
+          <p className="text-sm text-gray-500 bg-amber-50 rounded-xl px-3 py-2">הבעלים יוכל לנהל את כל המועדונים שלו ולעבור ביניהם</p>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">שם מלא *</label>
+            <input required value={ownerForm.full_name} onChange={e => setOwnerForm(f => ({ ...f, full_name: e.target.value }))} className="input" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">מייל *</label>
+            <input required type="email" value={ownerForm.email} onChange={e => setOwnerForm(f => ({ ...f, email: e.target.value }))} className="input" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">טלפון</label>
+            <input type="tel" value={ownerForm.phone} onChange={e => setOwnerForm(f => ({ ...f, phone: e.target.value }))} className="input" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">סיסמה ראשונית *</label>
+            <input required type="password" minLength={6} value={ownerForm.password} onChange={e => setOwnerForm(f => ({ ...f, password: e.target.value }))} className="input" />
+          </div>
+          <div className="flex gap-3 mt-1">
+            <button type="button" onClick={() => setOwnerOpen(false)} className="btn-secondary flex-1">ביטול</button>
+            <button type="submit" disabled={saving} className="btn-primary flex-1">{saving ? 'יוצר...' : 'צור בעלים'}</button>
           </div>
         </form>
       </Modal>
