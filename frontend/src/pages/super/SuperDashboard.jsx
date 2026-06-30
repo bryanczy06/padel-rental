@@ -140,6 +140,21 @@ export default function SuperDashboard() {
     load()
   }
 
+  async function removeOwner(club) {
+    if (!confirm(`להסיר את הבעלים מ"${club.name}"?\nהמשתמש יישאר במערכת אך לא יהיה בעלים של המועדון.`)) return
+    const { error } = await supabase.from('clubs').update({ owner_id: null }).eq('id', club.id)
+    if (error) { toast(error.message, 'error'); return }
+    // downgrade role to admin if they're not owner of another club
+    if (club.owner_id) {
+      const { data: otherClubs } = await supabase.from('clubs').select('id').eq('owner_id', club.owner_id).neq('id', club.id)
+      if (!otherClubs?.length) {
+        await supabase.from('profiles').update({ role: 'admin' }).eq('id', club.owner_id)
+      }
+    }
+    toast(`בעלים הוסר מ"${club.name}"`)
+    load()
+  }
+
   async function promoteToSuperAdmin(e) {
     e.preventDefault()
     setSaving(true)
@@ -218,9 +233,14 @@ export default function SuperDashboard() {
                 {!club.active && <span className="badge badge-red shrink-0">מושבת</span>}
               </div>
               {club.ownerName ? (
-                <div className="flex items-center gap-1.5 px-1">
+                <div className="flex items-center gap-1.5 px-1 group">
                   <Crown size={12} className="text-amber-500 shrink-0" />
-                  <p className="text-xs text-gray-500 truncate">{club.ownerName}</p>
+                  <p className="text-xs text-gray-500 truncate flex-1">{club.ownerName}</p>
+                  <button onClick={() => removeOwner(club)}
+                    title="הסר בעלים"
+                    className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-gray-300 hover:text-red-500 transition-all shrink-0">
+                    <Trash2 size={11} />
+                  </button>
                 </div>
               ) : (
                 <p className="text-xs text-gray-400 px-1 italic">אין בעלים מוגדר</p>
