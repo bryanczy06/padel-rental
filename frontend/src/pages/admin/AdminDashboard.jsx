@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/AuthContext'
 import Layout from '../../components/Layout'
 import Spinner from '../../components/Spinner'
-import { CircleDot, Users, Clock, TrendingUp, AlertTriangle } from 'lucide-react'
+import { CircleDot, Users, Clock, TrendingUp, AlertTriangle, Phone } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 
 export default function AdminDashboard() {
@@ -21,7 +21,7 @@ export default function AdminDashboard() {
     async function load() {
       const [racketRes, rentalRes, todayRes] = await Promise.all([
         supabase.from('rackets').select('status').eq('club_id', activeClub.id),
-        supabase.from('rentals').select('id, started_at, rackets(name), customers(full_name)')
+        supabase.from('rentals').select('id, started_at, rackets(name), customers(full_name, phone)')
           .eq('club_id', activeClub.id).is('returned_at', null),
         supabase.from('rentals').select('id').eq('club_id', activeClub.id)
           .gte('started_at', new Date().toISOString().slice(0, 10)),
@@ -37,8 +37,8 @@ export default function AdminDashboard() {
         today:     todayRes.data?.length || 0,
       })
 
-      const THREE_HOURS = 3 * 60 * 60 * 1000
-      setOverdue(open.filter(r => Date.now() - new Date(r.started_at) > THREE_HOURS))
+      const TWO_HOURS = 2 * 60 * 60 * 1000
+      setOverdue(open.filter(r => Date.now() - new Date(r.started_at) > TWO_HOURS))
 
       const days = []
       for (let i = 6; i >= 0; i--) {
@@ -105,11 +105,19 @@ export default function AdminDashboard() {
                 return (
                   <div key={r.id} className="flex items-center gap-3 p-2 bg-white rounded-xl">
                     <CircleDot size={14} className="text-amber-500 shrink-0" />
-                    <span className="font-medium text-sm">{r.rackets?.name}</span>
-                    <span className="text-sm text-gray-500">{r.customers?.full_name}</span>
-                    <span className="ms-auto text-xs font-semibold text-amber-600 flex items-center gap-1">
-                      <Clock size={12} /> {hrs}h
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{r.customers?.full_name}</p>
+                      <p className="text-xs text-gray-400">{r.rackets?.name}</p>
+                    </div>
+                    <span className="text-xs font-semibold text-amber-600 flex items-center gap-1 shrink-0">
+                      <Clock size={12} /> {hrs}ש׳
                     </span>
+                    {r.customers?.phone && (
+                      <a href={`tel:${r.customers.phone}`}
+                        className="p-1.5 text-brand-600 hover:bg-brand-50 rounded-lg transition-colors shrink-0">
+                        <Phone size={14} />
+                      </a>
+                    )}
                   </div>
                 )
               })}
