@@ -30,17 +30,29 @@ export default function Staff() {
   async function addStaff(e) {
     e.preventDefault()
     setSaving(true)
-    // Create auth user via Supabase Admin — in production use Edge Function or backend
-    // For now we use signUp and pass metadata for the trigger
-    const { error } = await supabase.auth.admin?.createUser({
-      email: form.email,
-      password: form.password,
-      user_metadata: { full_name: form.full_name, role: form.role, club_id: profile.club_id }
-    }) ?? { error: new Error('Use backend for user creation') }
-
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-staff-user`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({
+          full_name: form.full_name,
+          email: form.email,
+          password: form.password,
+          phone: form.phone,
+          role: form.role,
+        }),
+      }
+    )
+    const json = await res.json()
     setSaving(false)
-    if (error) {
-      toast('לאיצור עובד נדרש backend — ראה README', 'error')
+    if (!res.ok || json.error) {
+      toast(json.error || t('common.error'), 'error')
       return
     }
     toast(t('staff.addSuccess'))
