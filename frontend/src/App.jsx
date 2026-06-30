@@ -13,6 +13,7 @@ import Customers       from './pages/admin/Customers'
 import Staff           from './pages/admin/Staff'
 import RentalHistory   from './pages/admin/RentalHistory'
 import Join            from './pages/customer/Join'
+import SuperDashboard  from './pages/super/SuperDashboard'
 
 const ADMIN = ['admin', 'super_admin']
 const ALL   = ['admin', 'super_admin', 'staff']
@@ -55,6 +56,11 @@ export default function App() {
 
             {/* Customer self-registration */}
             <Route path="/join" element={<Join />} />
+
+            {/* Super admin */}
+            <Route path="/super" element={
+              <ProtectedRoute roles={['super_admin']}><SuperDashboard /></ProtectedRoute>
+            } />
 
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
