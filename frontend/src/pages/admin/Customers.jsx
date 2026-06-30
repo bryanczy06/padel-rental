@@ -34,7 +34,7 @@ export default function Customers() {
     setLoading(false)
   }
 
-  useEffect(() => { if (profile?.club_id) load() }, [profile])
+  useEffect(() => { load() }, [])
 
   const filtered = customers.filter(c => {
     const q = search.toLowerCase()
