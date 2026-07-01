@@ -30,6 +30,15 @@ export default function RentFlow() {
 
   async function checkAndSetCustomer(data) {
     const clubId = activeClub?.id || profile?.club_id
+
+    // בדוק אם יש השכרה פתוחה ללקוח
+    const { data: active } = await supabase.from('rentals').select('id')
+      .eq('customer_id', data.id).is('ended_at', null).limit(1)
+    if (active?.length) {
+      setError('ללקוח זה יש כבר מחבט מושכר / This customer already has an active rental')
+      return
+    }
+
     const q = supabase.from('rentals').select('id').eq('customer_id', data.id).eq('condition', 'damaged')
     const { data: dmg } = clubId ? await q.eq('club_id', clubId).limit(1) : await q.limit(1)
     setCustomer(data)
