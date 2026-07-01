@@ -59,7 +59,8 @@ export default function Customers() {
 
   async function deleteCustomer(id, name) {
     if (!confirm(`למחוק את "${name}"?`)) return
-    await supabase.from('customers').delete().eq('id', id)
+    const { error } = await supabase.from('customers').delete().eq('id', id)
+    if (error) { alert('שגיאה במחיקה: ' + error.message); return }
     load()
   }
 
