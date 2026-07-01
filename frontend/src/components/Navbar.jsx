@@ -92,8 +92,8 @@ export default function Navbar() {
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex flex-col w-60 min-h-screen bg-white border-e border-gray-100 p-4 fixed top-0 start-0 z-30">
         <div className="flex items-center gap-2 px-2 mb-6 mt-2">
-          <img src="/racktive-icon.svg" alt="Racktive" className="h-8 w-auto" />
           <span className="font-bold text-gray-900 text-lg">{t('app.name')}</span>
+          <img src="/racktive-icon.svg" alt="Racktive" className="h-8 w-auto" />
           {isSuperAdmin && <ShieldCheck size={14} className="text-brand-400 ms-auto" />}
         </div>
 
