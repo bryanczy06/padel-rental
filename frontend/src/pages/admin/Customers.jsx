@@ -58,7 +58,9 @@ export default function Customers() {
   }
 
   async function deleteCustomer(id, name) {
-    if (!confirm(`למחוק את "${name}"?`)) return
+    if (!confirm(`למחוק את "${name}" וכל ההשכרות שלו?`)) return
+    const { error: rentalsErr } = await supabase.from('rentals').delete().eq('customer_id', id)
+    if (rentalsErr) { alert('שגיאה במחיקת השכרות: ' + rentalsErr.message); return }
     const { error } = await supabase.from('customers').delete().eq('id', id)
     if (error) { alert('שגיאה במחיקה: ' + error.message); return }
     load()
