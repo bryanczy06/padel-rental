@@ -37,11 +37,19 @@ export default function Staff() {
 
   async function load() {
     if (!activeClub?.id) return
-    const [{ data: staffData }, { data: ownerRows }] = await Promise.all([
+    const [{ data: staffData }, { data: ownerRows }, { data: scRows }] = await Promise.all([
       supabase.from('profiles').select('*').eq('club_id', activeClub.id).order('created_at'),
       supabase.from('club_owners').select('profiles(*)').eq('club_id', activeClub.id),
+      supabase.from('staff_clubs').select('profiles(*)').eq('club_id', activeClub.id),
     ])
     const list = (staffData || []).filter(s => s.role !== 'super_admin')
+    // add multi-branch staff not already in list
+    for (const row of (scRows || [])) {
+      const p = row.profiles
+      if (p && p.role !== 'super_admin' && !list.find(s => s.id === p.id)) {
+        list.push(p)
+      }
+    }
     const owners = (ownerRows || []).map(r => r.profiles).filter(Boolean)
     for (const owner of owners) {
       if (owner.role !== 'super_admin' && !list.find(s => s.id === owner.id)) {
