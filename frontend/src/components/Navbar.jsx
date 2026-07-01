@@ -8,6 +8,7 @@ import {
   ClipboardList, LogOut, Menu, X, ShieldCheck,
   Building2, ChevronDown
 } from 'lucide-react'
+import RacktiveLogo from './RacktiveLogo'
 import { useState } from 'react'
 
 export default function Navbar() {
@@ -93,7 +94,7 @@ export default function Navbar() {
       <aside className="hidden lg:flex flex-col w-60 min-h-screen bg-white border-e border-gray-100 p-4 fixed top-0 start-0 z-30">
         <div className="flex items-center gap-2 px-2 mb-6 mt-2">
           <div className="h-8 w-8 rounded-xl bg-brand-600 flex items-center justify-center">
-            <CircleDot size={18} className="text-white" />
+            <RacktiveLogo size={18} />
           </div>
           <span className="font-bold text-gray-900 text-lg">{t('app.name')}</span>
           {isSuperAdmin && <ShieldCheck size={14} className="text-brand-400 ms-auto" />}
@@ -138,7 +139,7 @@ export default function Navbar() {
       <header className="lg:hidden fixed top-0 inset-x-0 z-30 bg-white border-b border-gray-100 px-4 h-14 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="h-7 w-7 rounded-lg bg-brand-600 flex items-center justify-center">
-            <CircleDot size={15} className="text-white" />
+            <RacktiveLogo size={15} />
           </div>
           <span className="font-bold text-gray-900">{t('app.name')}</span>
         </div>
