@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-import RacktiveLogo from '../../components/RacktiveLogo'
 import QRCode from 'qrcode'
 
 const T = {
@@ -122,9 +121,7 @@ export default function Join() {
 
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="h-14 w-14 rounded-2xl bg-brand-600 flex items-center justify-center shadow-lg shadow-brand-200 mb-3">
-            <RacktiveLogo size={28} />
-          </div>
+          <img src="/racktive-icon.svg" alt="Racktive" className="h-16 w-auto mb-1" />
           <h1 className="text-xl font-bold text-gray-900">{club?.name || 'Racktive'}</h1>
         </div>
 

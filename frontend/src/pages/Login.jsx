@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { signIn } from '../lib/auth'
 import { Lock, Mail } from 'lucide-react'
-import RacktiveLogo from '../components/RacktiveLogo'
 import LanguageToggle from '../components/LanguageToggle'
 
 export default function Login() {
@@ -46,9 +45,7 @@ export default function Login() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="h-14 w-14 rounded-2xl bg-brand-600 flex items-center justify-center shadow-lg shadow-brand-200 mb-4">
-            <RacktiveLogo size={28} />
-          </div>
+          <img src="/racktive-icon.svg" alt="Racktive" className="h-16 w-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900">{t('app.name')}</h1>
           <p className="text-sm text-gray-500 mt-1">{t('auth.login')}</p>
         </div>

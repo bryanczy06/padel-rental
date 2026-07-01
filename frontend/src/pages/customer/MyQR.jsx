@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { Search } from 'lucide-react'
-import RacktiveLogo from '../../components/RacktiveLogo'
 import QRCode from 'qrcode'
 
 const T = {
@@ -68,9 +67,7 @@ export default function MyQR() {
         </div>
 
         <div className="flex flex-col items-center gap-3">
-          <div className="h-14 w-14 rounded-2xl bg-brand-600 flex items-center justify-center shadow-lg shadow-brand-200">
-            <RacktiveLogo size={28} />
-          </div>
+          <img src="/racktive-icon.svg" alt="Racktive" className="h-16 w-auto" />
           <div className="text-center">
             <h1 className="text-xl font-bold text-gray-900">{t.title}</h1>
             <p className="text-sm text-gray-500 mt-1">{t.subtitle}</p>
