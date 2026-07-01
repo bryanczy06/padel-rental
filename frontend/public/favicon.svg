@@ -1,36 +1,44 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Green rounded square background -->
   <rect width="512" height="512" rx="110" fill="#28A745"/>
+
   <!-- Paddle head border -->
-  <rect x="70" y="55" width="372" height="340" rx="68" fill="none" stroke="white" stroke-width="26"/>
+  <rect x="60" y="50" width="392" height="360" rx="72" fill="none" stroke="white" stroke-width="28"/>
+
   <!-- Finder top-left -->
-  <rect x="102" y="87" width="100" height="100" rx="14" fill="white"/>
-  <rect x="122" y="107" width="60" height="60" rx="8" fill="#28A745"/>
-  <rect x="140" y="125" width="24" height="24" rx="4" fill="white"/>
+  <rect x="96" y="86" width="110" height="110" rx="20" fill="white"/>
+  <rect x="118" y="108" width="66" height="66" rx="12" fill="#28A745"/>
+  <rect x="136" y="126" width="30" height="30" rx="6" fill="white"/>
+
   <!-- Finder top-right -->
-  <rect x="310" y="87" width="100" height="100" rx="14" fill="white"/>
-  <rect x="330" y="107" width="60" height="60" rx="8" fill="#28A745"/>
-  <rect x="348" y="125" width="24" height="24" rx="4" fill="white"/>
+  <rect x="306" y="86" width="110" height="110" rx="20" fill="white"/>
+  <rect x="328" y="108" width="66" height="66" rx="12" fill="#28A745"/>
+  <rect x="346" y="126" width="30" height="30" rx="6" fill="white"/>
+
   <!-- Finder bottom-left -->
-  <rect x="102" y="208" width="100" height="100" rx="14" fill="white"/>
-  <rect x="122" y="228" width="60" height="60" rx="8" fill="#28A745"/>
-  <rect x="140" y="246" width="24" height="24" rx="4" fill="white"/>
+  <rect x="96" y="218" width="110" height="110" rx="20" fill="white"/>
+  <rect x="118" y="240" width="66" height="66" rx="12" fill="#28A745"/>
+  <rect x="136" y="258" width="30" height="30" rx="6" fill="white"/>
+
   <!-- Data dots bottom-right -->
-  <rect x="310" y="208" width="26" height="26" rx="5" fill="white"/>
-  <rect x="352" y="208" width="26" height="26" rx="5" fill="white"/>
-  <rect x="394" y="208" width="26" height="26" rx="5" fill="white"/>
-  <rect x="310" y="249" width="26" height="26" rx="5" fill="white"/>
-  <rect x="394" y="249" width="26" height="26" rx="5" fill="white"/>
-  <rect x="310" y="290" width="26" height="26" rx="5" fill="white"/>
-  <rect x="352" y="290" width="26" height="26" rx="5" fill="white"/>
-  <!-- Center dots -->
-  <rect x="225" y="87" width="26" height="26" rx="5" fill="white"/>
-  <rect x="225" y="128" width="26" height="26" rx="5" fill="white"/>
-  <rect x="102" y="169" width="26" height="26" rx="5" fill="white"/>
-  <rect x="143" y="169" width="26" height="26" rx="5" fill="white"/>
-  <rect x="225" y="169" width="26" height="26" rx="5" fill="white"/>
-  <rect x="310" y="169" width="26" height="26" rx="5" fill="white"/>
-  <rect x="352" y="169" width="26" height="26" rx="5" fill="white"/>
-  <rect x="394" y="169" width="26" height="26" rx="5" fill="white"/>
+  <rect x="306" y="218" width="30" height="30" rx="6" fill="white"/>
+  <rect x="352" y="218" width="30" height="30" rx="6" fill="white"/>
+  <rect x="306" y="260" width="30" height="30" rx="6" fill="white"/>
+  <rect x="352" y="260" width="30" height="30" rx="6" fill="white"/>
+  <rect x="306" y="302" width="30" height="30" rx="6" fill="white"/>
+  <rect x="398" y="218" width="30" height="30" rx="6" fill="white"/>
+  <rect x="398" y="302" width="30" height="30" rx="6" fill="white"/>
+
+  <!-- Center/timing dots -->
+  <rect x="228" y="86" width="30" height="30" rx="6" fill="white"/>
+  <rect x="228" y="130" width="30" height="30" rx="6" fill="white"/>
+  <rect x="96" y="186" width="30" height="30" rx="6" fill="white"/>
+  <rect x="140" y="186" width="30" height="30" rx="6" fill="white"/>
+  <rect x="228" y="186" width="30" height="30" rx="6" fill="white"/>
+  <rect x="306" y="186" width="30" height="30" rx="6" fill="white"/>
+  <rect x="352" y="186" width="30" height="30" rx="6" fill="white"/>
+  <rect x="398" y="186" width="30" height="30" rx="6" fill="white"/>
+
   <!-- Stem -->
-  <rect x="233" y="395" width="46" height="72" rx="23" fill="white"/>
+  <rect x="216" y="414" width="80" height="100" rx="40" fill="white"/>
 </svg>

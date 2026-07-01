@@ -1,54 +1,53 @@
-export default function RacktiveLogo({ size = 28, className = 'text-white' }) {
+export default function RacktiveLogo({ size = 28, className = 'text-white', bgColor = '#22c24e' }) {
   return (
     <svg
       width={size}
-      height={Math.round(size * 1.28)}
-      viewBox="0 0 100 128"
-      fill="currentColor"
+      height={Math.round(size * 1.22)}
+      viewBox="0 0 100 122"
+      fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
     >
-      {/* Paddle head — rounded square border */}
-      <rect x="3" y="3" width="94" height="94" rx="20" fill="none" stroke="currentColor" strokeWidth="6"/>
+      {/* Paddle head border */}
+      <rect x="4" y="4" width="92" height="86" rx="18" stroke="currentColor" strokeWidth="7"/>
 
-      {/* ── Finder top-left ── */}
-      <rect x="13" y="13" width="27" height="27" rx="4" fill="currentColor"/>
-      <rect x="18" y="18" width="17" height="17" rx="2" fill="none" stroke="currentColor" strokeWidth="0"/>
-      {/* white inner */}
-      <rect x="19" y="19" width="15" height="15" rx="2" fill="white"/>
-      <rect x="23" y="23" width="7" height="7" rx="1" fill="currentColor"/>
+      {/* Finder top-left */}
+      <rect x="14" y="13" width="24" height="24" rx="5" fill="currentColor"/>
+      <rect x="19.5" y="18.5" width="13" height="13" rx="2.5" fill={bgColor}/>
+      <rect x="23" y="22" width="6" height="6" rx="1" fill="currentColor"/>
 
-      {/* ── Finder top-right ── */}
-      <rect x="60" y="13" width="27" height="27" rx="4" fill="currentColor"/>
-      <rect x="65" y="19" width="15" height="15" rx="2" fill="white"/>
-      <rect x="70" y="23" width="7" height="7" rx="1" fill="currentColor"/>
+      {/* Finder top-right */}
+      <rect x="62" y="13" width="24" height="24" rx="5" fill="currentColor"/>
+      <rect x="67.5" y="18.5" width="13" height="13" rx="2.5" fill={bgColor}/>
+      <rect x="71" y="22" width="6" height="6" rx="1" fill="currentColor"/>
 
-      {/* ── Finder bottom-left ── */}
-      <rect x="13" y="60" width="27" height="27" rx="4" fill="currentColor"/>
-      <rect x="19" y="65" width="15" height="15" rx="2" fill="white"/>
-      <rect x="23" y="70" width="7" height="7" rx="1" fill="currentColor"/>
+      {/* Finder bottom-left */}
+      <rect x="14" y="56" width="24" height="24" rx="5" fill="currentColor"/>
+      <rect x="19.5" y="61.5" width="13" height="13" rx="2.5" fill={bgColor}/>
+      <rect x="23" y="65" width="6" height="6" rx="1" fill="currentColor"/>
 
-      {/* ── Data dots (bottom-right quadrant + center) ── */}
-      <rect x="60" y="60" width="7" height="7" rx="1.5" fill="currentColor"/>
-      <rect x="71" y="60" width="7" height="7" rx="1.5" fill="currentColor"/>
-      <rect x="82" y="60" width="7" height="7" rx="1.5" fill="currentColor"/>
-      <rect x="60" y="71" width="7" height="7" rx="1.5" fill="currentColor"/>
-      <rect x="82" y="71" width="7" height="7" rx="1.5" fill="currentColor"/>
-      <rect x="60" y="82" width="7" height="7" rx="1.5" fill="currentColor"/>
-      <rect x="71" y="82" width="7" height="7" rx="1.5" fill="currentColor"/>
+      {/* Data dots bottom-right */}
+      <rect x="62" y="56" width="7" height="7" rx="1.5" fill="currentColor"/>
+      <rect x="73" y="56" width="7" height="7" rx="1.5" fill="currentColor"/>
+      <rect x="84" y="56" width="7" height="7" rx="1.5" fill="currentColor"/>
+      <rect x="62" y="67" width="7" height="7" rx="1.5" fill="currentColor"/>
+      <rect x="73" y="67" width="7" height="7" rx="1.5" fill="currentColor"/>
+      <rect x="84" y="67" width="7" height="7" rx="1.5" fill="currentColor"/>
+      <rect x="62" y="78" width="7" height="7" rx="1.5" fill="currentColor"/>
+      <rect x="84" y="78" width="7" height="7" rx="1.5" fill="currentColor"/>
 
-      {/* center dots */}
-      <rect x="45" y="13" width="7" height="7" rx="1.5" fill="currentColor"/>
-      <rect x="45" y="24" width="7" height="7" rx="1.5" fill="currentColor"/>
-      <rect x="13" y="45" width="7" height="7" rx="1.5" fill="currentColor"/>
-      <rect x="24" y="45" width="7" height="7" rx="1.5" fill="currentColor"/>
-      <rect x="45" y="45" width="7" height="7" rx="1.5" fill="currentColor"/>
-      <rect x="60" y="45" width="7" height="7" rx="1.5" fill="currentColor"/>
-      <rect x="71" y="45" width="7" height="7" rx="1.5" fill="currentColor"/>
-      <rect x="82" y="45" width="7" height="7" rx="1.5" fill="currentColor"/>
+      {/* Center / timing dots */}
+      <rect x="42" y="13" width="7" height="7" rx="1.5" fill="currentColor"/>
+      <rect x="42" y="24" width="7" height="7" rx="1.5" fill="currentColor"/>
+      <rect x="14" y="46" width="7" height="7" rx="1.5" fill="currentColor"/>
+      <rect x="25" y="46" width="7" height="7" rx="1.5" fill="currentColor"/>
+      <rect x="42" y="46" width="7" height="7" rx="1.5" fill="currentColor"/>
+      <rect x="62" y="46" width="7" height="7" rx="1.5" fill="currentColor"/>
+      <rect x="73" y="46" width="7" height="7" rx="1.5" fill="currentColor"/>
+      <rect x="84" y="46" width="7" height="7" rx="1.5" fill="currentColor"/>
 
-      {/* ── Stem ── */}
-      <rect x="44" y="97" width="12" height="28" rx="6" fill="currentColor"/>
+      {/* Stem */}
+      <rect x="41" y="94" width="18" height="24" rx="9" fill="currentColor"/>
     </svg>
   )
 }
