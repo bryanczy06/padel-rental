@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-import { CircleDot } from 'lucide-react'
+import RacktiveLogo from '../../components/RacktiveLogo'
 import QRCode from 'qrcode'
 
 const T = {
@@ -123,9 +123,9 @@ export default function Join() {
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
           <div className="h-14 w-14 rounded-2xl bg-brand-600 flex items-center justify-center shadow-lg shadow-brand-200 mb-3">
-            <CircleDot size={28} className="text-white" />
+            <RacktiveLogo size={28} />
           </div>
-          <h1 className="text-xl font-bold text-gray-900">{club?.name || 'PadelRent'}</h1>
+          <h1 className="text-xl font-bold text-gray-900">{club?.name || 'Racktive'}</h1>
         </div>
 
         {step === 'register' && (

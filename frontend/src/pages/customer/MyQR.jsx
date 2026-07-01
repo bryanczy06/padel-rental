@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../../lib/supabase'
-import { CircleDot, Search } from 'lucide-react'
+import { Search } from 'lucide-react'
+import RacktiveLogo from '../../components/RacktiveLogo'
 import QRCode from 'qrcode'
 
 const T = {
@@ -68,7 +69,7 @@ export default function MyQR() {
 
         <div className="flex flex-col items-center gap-3">
           <div className="h-14 w-14 rounded-2xl bg-brand-600 flex items-center justify-center shadow-lg shadow-brand-200">
-            <CircleDot size={28} className="text-white" />
+            <RacktiveLogo size={28} />
           </div>
           <div className="text-center">
             <h1 className="text-xl font-bold text-gray-900">{t.title}</h1>

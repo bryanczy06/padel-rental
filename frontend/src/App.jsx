@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './lib/AuthContext'
 import { ToastProvider } from './components/Toast'
 import ProtectedRoute from './components/ProtectedRoute'
 import { Building2 } from 'lucide-react'
+import RacktiveLogo from './components/RacktiveLogo'
 
 function BranchPicker() {
   const { profile, activeClub, availableClubs, switchClub } = useAuth()
@@ -12,7 +13,7 @@ if (!profile || activeClub || availableClubs.length <= 1) return null
       <div className="w-full max-w-sm flex flex-col gap-6">
         <div className="text-center">
           <div className="h-14 w-14 rounded-2xl bg-brand-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-brand-200">
-            <Building2 size={26} className="text-white" />
+            <RacktiveLogo size={28} />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">באיזה סניף אתה היום?</h1>
           <p className="text-sm text-gray-500 mt-1">שלום {profile.full_name}, בחר סניף להמשך</p>

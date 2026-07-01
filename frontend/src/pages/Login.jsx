@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { signIn } from '../lib/auth'
-import { CircleDot, Lock, Mail } from 'lucide-react'
+import { Lock, Mail } from 'lucide-react'
+import RacktiveLogo from '../components/RacktiveLogo'
 import LanguageToggle from '../components/LanguageToggle'
 
 export default function Login() {
@@ -46,7 +47,7 @@ export default function Login() {
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
           <div className="h-14 w-14 rounded-2xl bg-brand-600 flex items-center justify-center shadow-lg shadow-brand-200 mb-4">
-            <CircleDot size={28} className="text-white" />
+            <RacktiveLogo size={28} />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">{t('app.name')}</h1>
           <p className="text-sm text-gray-500 mt-1">{t('auth.login')}</p>
