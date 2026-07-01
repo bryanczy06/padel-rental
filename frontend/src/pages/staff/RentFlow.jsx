@@ -84,7 +84,7 @@ export default function RentFlow() {
         .eq('id', racket.id)
     }
     setLoading(false)
-    if (err) { setError(t('common.error')); return }
+    if (err) { setError(err.message); return }
     toast(t('rent.success'))
     setStep(STEP.DONE)
   }
