@@ -1,0 +1,17 @@
+{
+  "name": "Racktive",
+  "short_name": "Racktive",
+  "description": "Racket rental management",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#28A745",
+  "theme_color": "#28A745",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
