@@ -33,7 +33,7 @@ export default function RentFlow() {
 
     // בדוק אם יש השכרה פתוחה ללקוח
     const { data: active } = await supabase.from('rentals').select('id')
-      .eq('customer_id', data.id).is('ended_at', null).limit(1)
+      .eq('customer_id', data.id).is('returned_at', null).limit(1)
     if (active?.length) {
       setError('ללקוח זה יש כבר מחבט מושכר / This customer already has an active rental')
       return
