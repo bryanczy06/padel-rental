@@ -23,7 +23,7 @@
     "inRepair": "In Repair",
     "todayRentals": "Today's Rentals",
     "overdueAlert": "Rackets out for more than 3 hours",
-    "quickRent": "New Rental",
+    "quickRent": "Scan Customer",
     "quickReturn": "Return Racket"
   },
   "rent": {

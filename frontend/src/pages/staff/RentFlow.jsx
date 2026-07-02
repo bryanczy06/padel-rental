@@ -7,9 +7,12 @@ import { useToast } from '../../components/Toast'
 import Layout from '../../components/Layout'
 import QRScanner from '../../components/QRScanner'
 import Spinner from '../../components/Spinner'
-import { CheckCircle2, User, CircleDot, ChevronRight, Search, ArrowRight, AlertTriangle } from 'lucide-react'
+import {
+  CheckCircle2, User, CircleDot, ChevronRight,
+  Search, ArrowRight, AlertTriangle, Star, Home, ScanLine
+} from 'lucide-react'
 
-const STEP = { CUSTOMER: 1, RACKET: 2, CONFIRM: 3, DONE: 4 }
+const STEP = { CUSTOMER: 1, CHECKIN: 2, RACKET: 3, CONFIRM: 4, DONE: 5 }
 
 export default function RentFlow() {
   const { t }                    = useTranslation()
@@ -17,21 +20,22 @@ export default function RentFlow() {
   const navigate                 = useNavigate()
   const toast                    = useToast()
 
-  const [step, setStep]             = useState(STEP.CUSTOMER)
-  const [customer, setCustomer]     = useState(null)
-  const [racket, setRacket]         = useState(null)
-  const [loading, setLoading]       = useState(false)
-  const [error, setError]           = useState('')
-  const [search, setSearch]         = useState('')
-  const [searchRes, setSearchRes]   = useState([])
-  const [searching, setSearching]   = useState(false)
-  const [showSearch, setShowSearch] = useState(false)
+  const [step, setStep]               = useState(STEP.CUSTOMER)
+  const [customer, setCustomer]       = useState(null)
+  const [racket, setRacket]           = useState(null)
+  const [loading, setLoading]         = useState(false)
+  const [error, setError]             = useState('')
+  const [search, setSearch]           = useState('')
+  const [searchRes, setSearchRes]     = useState([])
+  const [searching, setSearching]     = useState(false)
+  const [showSearch, setShowSearch]   = useState(false)
   const [damagedWarn, setDamagedWarn] = useState(false)
+  const [earnedPoints, setEarnedPoints] = useState(0)
 
   async function checkAndSetCustomer(data) {
     const clubId = activeClub?.id || profile?.club_id
 
-    // בדוק אם יש השכרה פתוחה ללקוח
+    // בדוק השכרה פתוחה
     const { data: active } = await supabase.from('rentals').select('id')
       .eq('customer_id', data.id).is('returned_at', null).limit(1)
     if (active?.length) {
@@ -39,10 +43,17 @@ export default function RentFlow() {
       return
     }
 
+    // צ׳ק אין אוטומטי: +5 נקודות
+    const newPoints = (data.points || 0) + 5
+    await supabase.from('customers').update({ points: newPoints }).eq('id', data.id)
+    const updatedCustomer = { ...data, points: newPoints }
+    setCustomer(updatedCustomer)
+    setEarnedPoints(5)
+
+    // בדוק מחבט שבור בעבר
     const q = supabase.from('rentals').select('id').eq('customer_id', data.id).eq('condition', 'damaged')
     const { data: dmg } = clubId ? await q.eq('club_id', clubId).limit(1) : await q.limit(1)
-    setCustomer(data)
-    if (dmg?.length) { setDamagedWarn(true) } else { setStep(STEP.RACKET) }
+    if (dmg?.length) { setDamagedWarn(true) } else { setStep(STEP.CHECKIN) }
     setError('')
   }
 
@@ -91,6 +102,11 @@ export default function RentFlow() {
     if (!err) {
       await supabase.from('rackets').update({ status: 'rented', usage_count: racket.usage_count + 1 })
         .eq('id', racket.id)
+      // +10 נקודות על השכרה
+      const newPoints = (customer.points || 0) + 10
+      await supabase.from('customers').update({ points: newPoints }).eq('id', customer.id)
+      setCustomer(c => ({ ...c, points: newPoints }))
+      setEarnedPoints(p => p + 10)
     }
     setLoading(false)
     if (err) { setError(err.message); return }
@@ -98,9 +114,20 @@ export default function RentFlow() {
     setStep(STEP.DONE)
   }
 
+  function reset() {
+    setStep(STEP.CUSTOMER)
+    setCustomer(null)
+    setRacket(null)
+    setError('')
+    setSearch('')
+    setSearchRes([])
+    setShowSearch(false)
+    setEarnedPoints(0)
+  }
+
   return (
     <Layout>
-      {/* Damaged customer warning */}
+      {/* אזהרת מחבט שבור */}
       {damagedWarn && customer && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl flex flex-col gap-4">
@@ -114,9 +141,9 @@ export default function RentFlow() {
               </p>
             </div>
             <div className="flex gap-3">
-              <button onClick={() => { setDamagedWarn(false); setCustomer(null) }}
+              <button onClick={() => { setDamagedWarn(false); setCustomer(null); setStep(STEP.CUSTOMER) }}
                 className="btn-secondary flex-1">ביטול</button>
-              <button onClick={() => { setDamagedWarn(false); setStep(STEP.RACKET) }}
+              <button onClick={() => { setDamagedWarn(false); setStep(STEP.CHECKIN) }}
                 className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors">
                 המשך בכל זאת
               </button>
@@ -131,27 +158,14 @@ export default function RentFlow() {
           <button onClick={() => navigate('/staff')} className="btn-secondary p-2">
             <ChevronRight size={18} className="rtl-flip" />
           </button>
-          <h1 className="text-xl font-bold text-gray-900">{t('rent.title')}</h1>
-        </div>
-
-        {/* Steps indicator */}
-        <div className="flex items-center gap-2 mb-6">
-          {[STEP.CUSTOMER, STEP.RACKET, STEP.CONFIRM].map((s, i) => (
-            <div key={s} className="flex items-center gap-2 flex-1">
-              <div className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0
-                ${step > s ? 'bg-brand-600 text-white' : step === s ? 'bg-brand-600 text-white ring-4 ring-brand-100' : 'bg-gray-100 text-gray-400'}`}>
-                {step > s ? <CheckCircle2 size={14} /> : i + 1}
-              </div>
-              {i < 2 && <div className={`flex-1 h-0.5 ${step > s ? 'bg-brand-600' : 'bg-gray-200'}`} />}
-            </div>
-          ))}
+          <h1 className="text-xl font-bold text-gray-900">סריקת לקוח</h1>
         </div>
 
         {error && (
           <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-xl text-sm">{error}</div>
         )}
 
-        {/* Step 1: Customer */}
+        {/* שלב 1: סריקת לקוח */}
         {step === STEP.CUSTOMER && (
           <div className="card flex flex-col gap-4">
             <h2 className="font-semibold text-gray-900 flex items-center gap-2">
@@ -185,7 +199,51 @@ export default function RentFlow() {
           </div>
         )}
 
-        {/* Step 2: Racket */}
+        {/* שלב 2: צ׳ק אין הושלם — בחר המשך */}
+        {step === STEP.CHECKIN && customer && (
+          <div className="flex flex-col gap-4">
+            {/* כרטיס לקוח + נקודות */}
+            <div className="card flex flex-col items-center gap-3 py-6 text-center border-brand-200 border-2">
+              <div className="h-14 w-14 rounded-full bg-brand-50 flex items-center justify-center">
+                <User size={28} className="text-brand-600" />
+              </div>
+              <div>
+                <p className="text-lg font-bold text-gray-900">{customer.full_name}</p>
+                <p className="text-sm text-green-600 font-medium mt-0.5">✓ צ׳ק אין הושלם</p>
+              </div>
+              <div className="flex items-center gap-2 bg-amber-50 rounded-xl px-4 py-2">
+                <Star size={16} className="text-amber-500 fill-amber-400" />
+                <span className="text-sm font-semibold text-amber-700">+5 נקודות</span>
+                <span className="text-xs text-amber-600">· סה״כ {customer.points}</span>
+              </div>
+            </div>
+
+            {/* אפשרויות המשך */}
+            <button onClick={() => { setStep(STEP.RACKET); setError('') }}
+              className="card flex items-center gap-4 py-5 border-2 border-brand-100 hover:border-brand-400 hover:shadow-md transition-all text-start">
+              <div className="h-12 w-12 rounded-xl bg-brand-600 flex items-center justify-center shrink-0">
+                <ScanLine size={22} className="text-white" />
+              </div>
+              <div>
+                <p className="font-semibold text-gray-900">סרוק מחבט להשכרה</p>
+                <p className="text-xs text-gray-500 mt-0.5">+10 נקודות נוספות</p>
+              </div>
+            </button>
+
+            <button onClick={() => navigate('/staff')}
+              className="card flex items-center gap-4 py-5 border-2 border-gray-100 hover:border-gray-300 hover:shadow-md transition-all text-start">
+              <div className="h-12 w-12 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
+                <Home size={22} className="text-gray-600" />
+              </div>
+              <div>
+                <p className="font-semibold text-gray-900">סיום — ללא השכרה</p>
+                <p className="text-xs text-gray-500 mt-0.5">הלקוח לא צריך מחבט</p>
+              </div>
+            </button>
+          </div>
+        )}
+
+        {/* שלב 3: סריקת מחבט */}
         {step === STEP.RACKET && (
           <div className="flex flex-col gap-4">
             <div className="card flex items-center gap-3 border-brand-200 border">
@@ -204,10 +262,13 @@ export default function RentFlow() {
               </h2>
               {loading ? <Spinner /> : <QRScanner onResult={handleRacketQR} />}
             </div>
+            <button onClick={() => setStep(STEP.CHECKIN)} className="btn-secondary w-full">
+              {t('common.back')}
+            </button>
           </div>
         )}
 
-        {/* Step 3: Confirm */}
+        {/* שלב 4: אישור */}
         {step === STEP.CONFIRM && (
           <div className="flex flex-col gap-4">
             <div className="card">
@@ -240,7 +301,7 @@ export default function RentFlow() {
           </div>
         )}
 
-        {/* Done */}
+        {/* שלב 5: סיום */}
         {step === STEP.DONE && (
           <div className="card flex flex-col items-center gap-4 py-10 text-center">
             <div className="h-16 w-16 rounded-full bg-brand-50 flex items-center justify-center">
@@ -250,10 +311,12 @@ export default function RentFlow() {
               <p className="font-bold text-gray-900 text-xl">{t('rent.success')}</p>
               <p className="text-sm text-gray-500 mt-1">{customer.full_name} · {racket.name}</p>
             </div>
-            <button onClick={() => { setStep(STEP.CUSTOMER); setCustomer(null); setRacket(null) }}
-              className="btn-primary w-full">
-              {t('dashboard.quickRent')}
-            </button>
+            <div className="flex items-center gap-2 bg-amber-50 rounded-xl px-4 py-2.5">
+              <Star size={16} className="text-amber-500 fill-amber-400" />
+              <span className="text-sm font-semibold text-amber-700">+{earnedPoints} נקודות הושלם</span>
+              <span className="text-xs text-amber-600">· סה״כ {customer.points}</span>
+            </div>
+            <button onClick={reset} className="btn-primary w-full">סרוק לקוח נוסף</button>
             <button onClick={() => navigate('/staff')} className="btn-secondary w-full">
               {t('common.back')}
             </button>

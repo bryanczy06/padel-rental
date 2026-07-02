@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import QRCode from 'qrcode'
-import { Search } from 'lucide-react'
+import { Search, Star } from 'lucide-react'
 
 const STORAGE_KEY = 'padel_customer_id'
 
@@ -134,6 +134,10 @@ export default function CustomerPortal() {
         </div>
         <div className="bg-white p-3 rounded-2xl shadow-sm border border-gray-100">
           <img src={url} alt="QR Code" className="w-64 h-64" />
+        </div>
+        <div className="flex items-center justify-center gap-2 bg-amber-50 rounded-xl px-4 py-2.5">
+          <Star size={15} className="text-amber-500 fill-amber-400" />
+          <span className="text-sm font-semibold text-amber-700">{customer.points ?? 0} נקודות</span>
         </div>
         <div className="bg-brand-50 rounded-xl px-4 py-3 text-center w-full">
           <p className="text-xs text-brand-700 font-medium">{hint}</p>
