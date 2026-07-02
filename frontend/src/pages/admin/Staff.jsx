@@ -139,7 +139,13 @@ export default function Staff() {
 
   async function removeStaff(id) {
     if (!confirm(t('staff.removeConfirm'))) return
-    await supabase.from('profiles').delete().eq('id', id)
+    // הסר מ-staff_clubs של הסניף הנוכחי
+    await supabase.from('staff_clubs').delete()
+      .eq('profile_id', id).eq('club_id', activeClub.id)
+    // אם ה-profile.club_id הוא הסניף הנוכחי — נאפס אותו
+    await supabase.from('profiles')
+      .update({ club_id: null, role: 'staff' })
+      .eq('id', id).eq('club_id', activeClub.id)
     load()
   }
 
