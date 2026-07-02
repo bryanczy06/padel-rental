@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/AuthContext'
 import Layout from '../../components/Layout'
 import Spinner from '../../components/Spinner'
-import { CircleDot, Users, Clock, TrendingUp, AlertTriangle, Phone } from 'lucide-react'
+import { CircleDot, Users, Clock, TrendingUp, AlertTriangle, Phone, Banknote } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 
 export default function AdminDashboard() {
@@ -19,22 +19,31 @@ export default function AdminDashboard() {
     if (!activeClub?.id) return
     setLoading(true)
     async function load() {
-      const [racketRes, rentalRes, todayRes] = await Promise.all([
+      const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
+      const [racketRes, rentalRes, todayRes, monthRes, totalRes] = await Promise.all([
         supabase.from('rackets').select('status').eq('club_id', activeClub.id),
         supabase.from('rentals').select('id, started_at, rackets(name), customers(full_name, phone)')
           .eq('club_id', activeClub.id).is('returned_at', null),
         supabase.from('rentals').select('id').eq('club_id', activeClub.id)
           .gte('started_at', new Date().toISOString().slice(0, 10)),
+        supabase.from('rentals').select('id', { count: 'exact', head: true })
+          .eq('club_id', activeClub.id).gte('started_at', monthStart),
+        supabase.from('rentals').select('id', { count: 'exact', head: true })
+          .eq('club_id', activeClub.id),
       ])
 
       const rackets = racketRes.data || []
       const open    = rentalRes.data || []
 
+      const price = activeClub?.price_per_rental ?? null
       setStats({
-        available: rackets.filter(r => r.status === 'available').length,
-        rented:    rackets.filter(r => r.status === 'rented').length,
-        repair:    rackets.filter(r => r.status === 'repair').length,
-        today:     todayRes.data?.length || 0,
+        available:    rackets.filter(r => r.status === 'available').length,
+        rented:       rackets.filter(r => r.status === 'rented').length,
+        repair:       rackets.filter(r => r.status === 'repair').length,
+        today:        todayRes.data?.length || 0,
+        monthCount:   monthRes.count || 0,
+        totalCount:   totalRes.count || 0,
+        price,
       })
 
       const TWO_HOURS = 2 * 60 * 60 * 1000
@@ -91,6 +100,30 @@ export default function AdminDashboard() {
             </div>
           ))}
         </div>
+
+        {/* Revenue cards */}
+        {stats.price != null && (
+          <div className="grid grid-cols-2 gap-3">
+            <div className="card flex flex-col gap-2">
+              <div className="h-9 w-9 rounded-xl bg-emerald-50 flex items-center justify-center">
+                <Banknote size={18} className="text-emerald-600" />
+              </div>
+              <p className="text-2xl font-bold text-gray-900">
+                ₪{(stats.monthCount * stats.price).toLocaleString()}
+              </p>
+              <p className="text-xs text-gray-500 leading-tight">הכנסות החודש</p>
+            </div>
+            <div className="card flex flex-col gap-2">
+              <div className="h-9 w-9 rounded-xl bg-emerald-50 flex items-center justify-center">
+                <Banknote size={18} className="text-emerald-600" />
+              </div>
+              <p className="text-2xl font-bold text-gray-900">
+                ₪{(stats.totalCount * stats.price).toLocaleString()}
+              </p>
+              <p className="text-xs text-gray-500 leading-tight">סך הכל הכנסות</p>
+            </div>
+          </div>
+        )}
 
         {/* Overdue alert */}
         {overdue.length > 0 && (
