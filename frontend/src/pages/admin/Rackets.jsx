@@ -7,7 +7,7 @@ import Layout from '../../components/Layout'
 import Modal from '../../components/Modal'
 import QRCodeCard from '../../components/QRCodeCard'
 import Spinner from '../../components/Spinner'
-import { Plus, QrCode, Wrench, Check, CircleDot, Trash2, Archive, ArchiveRestore } from 'lucide-react'
+import { Plus, QrCode, Wrench, Check, CircleDot, Trash2, Archive, ArchiveRestore, ShieldCheck, Pencil } from 'lucide-react'
 
 function StatusBadge({ status, t }) {
   const map = {
@@ -39,6 +39,9 @@ export default function Rackets() {
   const [form, setForm]         = useState({ name: '', brand: '', notes: '' })
   const [saving, setSaving]     = useState(false)
   const [showArchive, setShowArchive] = useState(false)
+  const [price, setPrice]       = useState(activeClub?.price_per_rental ?? '')
+  const [editPrice, setEditPrice] = useState(false)
+  const [savingPrice, setSavingPrice] = useState(false)
 
   async function load() {
     const { data } = await supabase.from('rackets').select('*')
@@ -90,6 +93,18 @@ export default function Rackets() {
     load()
   }
 
+  async function savePrice() {
+    const val = parseFloat(price)
+    if (isNaN(val) || val < 0) return
+    setSavingPrice(true)
+    const { error } = await supabase.from('clubs').update({ price_per_rental: val }).eq('id', activeClub.id)
+    setSavingPrice(false)
+    if (error) { toast('שגיאה: ' + error.message, 'error'); return }
+    activeClub.price_per_rental = val
+    setEditPrice(false)
+    toast('המחיר עודכן')
+  }
+
   async function restoreRacket(id, name) {
     if (!confirm(`לשחזר את "${name}" מהארכיון?`)) return
     const { error } = await supabase.from('rackets')
@@ -123,6 +138,37 @@ export default function Rackets() {
           </div>
         </div>
 
+        {/* Price setting */}
+        <div className="card flex items-center gap-3 py-3">
+          <ShieldCheck size={18} className="text-brand-600 shrink-0" />
+          <span className="text-sm font-medium text-gray-700">מחיר השכרה למחבט:</span>
+          {editPrice ? (
+            <div className="flex items-center gap-2 ms-auto">
+              <input
+                type="number" min="0" step="0.5" value={price}
+                onChange={e => setPrice(e.target.value)}
+                className="input w-24 py-1 text-sm"
+                placeholder="₪"
+                autoFocus
+              />
+              <button onClick={savePrice} disabled={savingPrice} className="btn-primary text-xs py-1.5 px-3">
+                {savingPrice ? '...' : 'שמור'}
+              </button>
+              <button onClick={() => { setEditPrice(false); setPrice(activeClub?.price_per_rental ?? '') }}
+                className="btn-secondary text-xs py-1.5 px-3">ביטול</button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 ms-auto">
+              <span className="font-semibold text-gray-900">
+                {activeClub?.price_per_rental != null ? `₪${activeClub.price_per_rental}` : 'לא הוגדר'}
+              </span>
+              <button onClick={() => setEditPrice(true)} className="p-1.5 text-gray-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors">
+                <Pencil size={14} />
+              </button>
+            </div>
+          )}
+        </div>
+
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {displayed.map(r => (
             <div key={r.id} className={`card flex flex-col gap-3 ${r.archived_at ? 'opacity-70' : ''}`}>
@@ -135,9 +181,16 @@ export default function Rackets() {
                 {r.archived_at && <span className="badge-red text-xs">ארכיון</span>}
               </div>
 
-              <div className="flex items-center gap-1 text-xs text-gray-400">
-                <CircleDot size={12} />
-                {t('rackets.usageCount')}: <span className="font-semibold text-gray-600">{r.usage_count}</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1 text-xs text-gray-400">
+                  <CircleDot size={12} />
+                  {t('rackets.usageCount')}: <span className="font-semibold text-gray-600">{r.usage_count}</span>
+                </div>
+                {activeClub?.price_per_rental != null && (
+                  <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                    ₪{(r.usage_count * activeClub.price_per_rental).toLocaleString()} הכנסות
+                  </span>
+                )}
               </div>
 
               <div className="text-xs text-gray-400 flex flex-col gap-0.5">
