@@ -22,7 +22,7 @@ export function AuthProvider({ children }) {
     } else if (prof.role === 'owner') {
       const { data: ownerRows } = await supabase
         .from('club_owners').select('clubs(*)').eq('profile_id', prof.id)
-      const data = (ownerRows || []).map(r => r.clubs).filter(Boolean).sort((a, b) => a.name.localeCompare(b.name))
+      const data = (ownerRows || []).map(r => r.clubs).filter(c => c && c.active).sort((a, b) => a.name.localeCompare(b.name))
       setAvailableClubs(data)
       const own = data.find(c => c.id === prof.club_id) || data[0] || null
       setActiveClub(prev => prev ? data.find(c => c.id === prev.id) || own : own)
@@ -34,12 +34,12 @@ export function AuthProvider({ children }) {
 
       if (clubIds.length > 1) {
         const { data: clubsData } = await supabase
-          .from('clubs').select('*').in('id', clubIds)
-const clubs = clubsData || []
+          .from('clubs').select('*').in('id', clubIds).eq('active', true)
+        const clubs = clubsData || []
         setAvailableClubs(clubs)
-        setActiveClub(prev => prev ? clubs.find(c => c.id === prev.id) || null : null)
+        setActiveClub(prev => prev ? clubs.find(c => c.id === prev.id) || clubs[0] || null : clubs[0] || null)
       } else {
-        const club = prof.clubs ? { ...prof.clubs, id: prof.club_id } : null
+        const club = prof.clubs?.active ? { ...prof.clubs, id: prof.club_id } : null
         setAvailableClubs(club ? [club] : [])
         setActiveClub(club)
       }
