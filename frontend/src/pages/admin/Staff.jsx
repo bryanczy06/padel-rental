@@ -139,13 +139,26 @@ export default function Staff() {
 
   async function removeStaff(id) {
     if (!confirm(t('staff.removeConfirm'))) return
+
     // הסר מ-staff_clubs של הסניף הנוכחי
     await supabase.from('staff_clubs').delete()
       .eq('profile_id', id).eq('club_id', activeClub.id)
-    // אם ה-profile.club_id הוא הסניף הנוכחי — נאפס אותו
-    await supabase.from('profiles')
-      .update({ club_id: null, role: 'staff' })
-      .eq('id', id).eq('club_id', activeClub.id)
+
+    // בדוק אם נשארו סניפים אחרים
+    const { data: remaining } = await supabase
+      .from('staff_clubs').select('club_id').eq('profile_id', id)
+
+    if (!remaining || remaining.length === 0) {
+      // אין לו יותר סניפים — מחק לגמרי מ-auth
+      const { error } = await supabase.rpc('delete_staff_user', { target_id: id })
+      if (error) { alert('שגיאה במחיקה: ' + error.message); return }
+    } else {
+      // יש לו עוד סניפים — רק אפס את profile.club_id אם הוא הסניף הזה
+      await supabase.from('profiles')
+        .update({ club_id: null })
+        .eq('id', id).eq('club_id', activeClub.id)
+    }
+
     load()
   }
 
