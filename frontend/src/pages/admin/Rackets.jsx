@@ -7,7 +7,7 @@ import Layout from '../../components/Layout'
 import Modal from '../../components/Modal'
 import QRCodeCard from '../../components/QRCodeCard'
 import Spinner from '../../components/Spinner'
-import { Plus, QrCode, Wrench, Check, CircleDot, Trash2 } from 'lucide-react'
+import { Plus, QrCode, Wrench, Check, CircleDot, Trash2, Archive, ArchiveRestore } from 'lucide-react'
 
 function StatusBadge({ status, t }) {
   const map = {
@@ -23,6 +23,11 @@ function StatusBadge({ status, t }) {
   return <span className={map[status]}>{labels[status]}</span>
 }
 
+function fmt(d) {
+  if (!d) return '—'
+  return new Date(d).toLocaleDateString('he-IL')
+}
+
 export default function Rackets() {
   const { t }                   = useTranslation()
   const { profile, activeClub } = useAuth()
@@ -33,6 +38,7 @@ export default function Rackets() {
   const [qrTarget, setQRTarget] = useState(null)
   const [form, setForm]         = useState({ name: '', brand: '', notes: '' })
   const [saving, setSaving]     = useState(false)
+  const [showArchive, setShowArchive] = useState(false)
 
   async function load() {
     const { data } = await supabase.from('rackets').select('*')
@@ -42,6 +48,10 @@ export default function Rackets() {
   }
 
   useEffect(() => { if (activeClub?.id) load() }, [activeClub?.id])
+
+  const active   = rackets.filter(r => !r.archived_at)
+  const archived = rackets.filter(r =>  r.archived_at)
+  const displayed = showArchive ? archived : active
 
   async function addRacket(e) {
     e.preventDefault()
@@ -63,8 +73,30 @@ export default function Rackets() {
   }
 
   async function deleteRacket(id, name) {
-    if (!confirm(`למחוק את "${name}"?`)) return
-    await supabase.from('rackets').delete().eq('id', id)
+    if (!confirm(`למחוק לצמיתות את "${name}"? כל ההשכרות שלו יימחקו גם כן.`)) return
+    await supabase.from('rentals').delete().eq('racket_id', id)
+    const { error } = await supabase.from('rackets').delete().eq('id', id)
+    if (error) { toast('שגיאה במחיקה: ' + error.message, 'error'); return }
+    load()
+  }
+
+  async function archiveRacket(id, name) {
+    if (!confirm(`להעביר את "${name}" לארכיון?`)) return
+    const { error } = await supabase.from('rackets')
+      .update({ archived_at: new Date().toISOString(), status: 'available' })
+      .eq('id', id)
+    if (error) { toast('שגיאה: ' + error.message, 'error'); return }
+    toast('המחבט הועבר לארכיון')
+    load()
+  }
+
+  async function restoreRacket(id, name) {
+    if (!confirm(`לשחזר את "${name}" מהארכיון?`)) return
+    const { error } = await supabase.from('rackets')
+      .update({ archived_at: null })
+      .eq('id', id)
+    if (error) { toast('שגיאה: ' + error.message, 'error'); return }
+    toast('המחבט שוחזר')
     load()
   }
 
@@ -75,20 +107,32 @@ export default function Rackets() {
       <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">{t('rackets.title')}</h1>
-          <button onClick={() => setAddOpen(true)} className="btn-primary">
-            <Plus size={16} /> {t('rackets.add')}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowArchive(v => !v)}
+              className={`btn-secondary text-sm ${showArchive ? 'bg-gray-100' : ''}`}
+            >
+              <Archive size={15} />
+              {showArchive ? 'פעילים' : `ארכיון (${archived.length})`}
+            </button>
+            {!showArchive && (
+              <button onClick={() => setAddOpen(true)} className="btn-primary">
+                <Plus size={16} /> {t('rackets.add')}
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {rackets.map(r => (
-            <div key={r.id} className="card flex flex-col gap-3">
+          {displayed.map(r => (
+            <div key={r.id} className={`card flex flex-col gap-3 ${r.archived_at ? 'opacity-70' : ''}`}>
               <div className="flex items-start justify-between">
                 <div>
                   <p className="font-semibold text-gray-900">{r.name}</p>
                   {r.brand && <p className="text-sm text-gray-500">{r.brand}</p>}
                 </div>
-                <StatusBadge status={r.status} t={t} />
+                {!r.archived_at && <StatusBadge status={r.status} t={t} />}
+                {r.archived_at && <span className="badge-red text-xs">ארכיון</span>}
               </div>
 
               <div className="flex items-center gap-1 text-xs text-gray-400">
@@ -96,22 +140,41 @@ export default function Rackets() {
                 {t('rackets.usageCount')}: <span className="font-semibold text-gray-600">{r.usage_count}</span>
               </div>
 
+              <div className="text-xs text-gray-400 flex flex-col gap-0.5">
+                <span>תאריך קליטה: <span className="text-gray-600">{fmt(r.created_at)}</span></span>
+                {r.archived_at && (
+                  <span>תאריך סיום: <span className="text-gray-600">{fmt(r.archived_at)}</span></span>
+                )}
+              </div>
+
               {r.notes && <p className="text-xs text-gray-400 italic">{r.notes}</p>}
 
               <div className="flex gap-2 flex-wrap mt-1">
-                <button onClick={() => setQRTarget(r)} className="btn-secondary text-xs py-1.5 px-3">
-                  <QrCode size={13} /> QR
-                </button>
-                {r.status === 'available' || r.status === 'rented' ? (
-                  <button onClick={() => setStatus(r.id, 'repair')} className="btn-danger text-xs py-1.5 px-3">
-                    <Wrench size={13} /> {t('rackets.sendToRepair')}
-                  </button>
-                ) : (
-                  <button onClick={() => setStatus(r.id, 'available')} className="btn-secondary text-xs py-1.5 px-3">
-                    <Check size={13} /> {t('rackets.markAvailable')}
+                {!r.archived_at && (
+                  <>
+                    <button onClick={() => setQRTarget(r)} className="btn-secondary text-xs py-1.5 px-3">
+                      <QrCode size={13} /> QR
+                    </button>
+                    {r.status === 'available' || r.status === 'rented' ? (
+                      <button onClick={() => setStatus(r.id, 'repair')} className="btn-danger text-xs py-1.5 px-3">
+                        <Wrench size={13} /> {t('rackets.sendToRepair')}
+                      </button>
+                    ) : (
+                      <button onClick={() => setStatus(r.id, 'available')} className="btn-secondary text-xs py-1.5 px-3">
+                        <Check size={13} /> {t('rackets.markAvailable')}
+                      </button>
+                    )}
+                    <button onClick={() => archiveRacket(r.id, r.name)} className="p-1.5 text-gray-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors" title="העבר לארכיון">
+                      <Archive size={15} />
+                    </button>
+                  </>
+                )}
+                {r.archived_at && (
+                  <button onClick={() => restoreRacket(r.id, r.name)} className="btn-secondary text-xs py-1.5 px-3">
+                    <ArchiveRestore size={13} /> שחזר
                   </button>
                 )}
-                <button onClick={() => deleteRacket(r.id, r.name)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors ms-auto">
+                <button onClick={() => deleteRacket(r.id, r.name)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors ms-auto" title="מחק לצמיתות">
                   <Trash2 size={15} />
                 </button>
               </div>
@@ -119,10 +182,10 @@ export default function Rackets() {
           ))}
         </div>
 
-        {rackets.length === 0 && (
+        {displayed.length === 0 && (
           <div className="text-center py-16 text-gray-400">
             <CircleDot size={40} className="mx-auto mb-3 opacity-30" />
-            <p>{t('common.noData')}</p>
+            <p>{showArchive ? 'אין מחבטים בארכיון' : t('common.noData')}</p>
           </div>
         )}
       </div>
