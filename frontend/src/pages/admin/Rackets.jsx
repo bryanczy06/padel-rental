@@ -7,7 +7,8 @@ import Layout from '../../components/Layout'
 import Modal from '../../components/Modal'
 import QRCodeCard from '../../components/QRCodeCard'
 import Spinner from '../../components/Spinner'
-import { Plus, QrCode, Wrench, Check, CircleDot, Trash2, Archive, ArchiveRestore, ShieldCheck, Pencil } from 'lucide-react'
+import { Plus, QrCode, Wrench, Check, CircleDot, Trash2, Archive, ArchiveRestore, ShieldCheck, Pencil, Download } from 'lucide-react'
+import { exportRackets } from '../../lib/exportExcel'
 
 function StatusBadge({ status, t }) {
   const map = {
@@ -129,6 +130,10 @@ export default function Rackets() {
             >
               <Archive size={15} />
               {showArchive ? 'פעילים' : `ארכיון (${archived.length})`}
+            </button>
+            <button onClick={() => exportRackets(rackets, activeClub?.price_per_rental, activeClub?.name)}
+              className="btn-secondary text-sm">
+              <Download size={15} /> אקסל
             </button>
             {!showArchive && (
               <button onClick={() => setAddOpen(true)} className="btn-primary">

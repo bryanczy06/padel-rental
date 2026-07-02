@@ -7,7 +7,8 @@ import Layout from '../../components/Layout'
 import Modal from '../../components/Modal'
 import QRCodeCard from '../../components/QRCodeCard'
 import Spinner from '../../components/Spinner'
-import { Plus, QrCode, Search, Users, Phone, Mail, ClipboardList, Trash2, AlertTriangle, Star } from 'lucide-react'
+import { Plus, QrCode, Search, Users, Phone, Mail, ClipboardList, Trash2, AlertTriangle, Star, Download } from 'lucide-react'
+import { exportCustomers } from '../../lib/exportExcel'
 
 export default function Customers() {
   const { t }                    = useTranslation()
@@ -83,9 +84,14 @@ export default function Customers() {
       <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-2xl font-bold text-gray-900">{t('customers.title')}</h1>
-          <button onClick={() => setAddOpen(true)} className="btn-primary shrink-0">
-            <Plus size={16} /> {t('customers.add')}
-          </button>
+          <div className="flex gap-2">
+            <button onClick={() => exportCustomers(customers)} className="btn-secondary shrink-0">
+              <Download size={15} /> אקסל
+            </button>
+            <button onClick={() => setAddOpen(true)} className="btn-primary shrink-0">
+              <Plus size={16} /> {t('customers.add')}
+            </button>
+          </div>
         </div>
 
         {/* Search */}

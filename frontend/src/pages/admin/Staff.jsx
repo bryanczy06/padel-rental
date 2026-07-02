@@ -6,7 +6,8 @@ import { useToast } from '../../components/Toast'
 import Layout from '../../components/Layout'
 import Modal from '../../components/Modal'
 import Spinner from '../../components/Spinner'
-import { Plus, Trash2, UserCog, Phone, Shield, Crown, Pencil } from 'lucide-react'
+import { Plus, Trash2, UserCog, Phone, Shield, Crown, Pencil, Download } from 'lucide-react'
+import { exportStaff } from '../../lib/exportExcel'
 
 function roleBadge(role) {
   if (role === 'owner')      return { label: 'בעלים',  icon: Crown,  color: 'bg-amber-100 text-amber-700',  iconColor: 'text-amber-500' }
@@ -175,9 +176,14 @@ export default function Staff() {
       <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">{t('staff.title')}</h1>
-          <button onClick={() => setAddOpen(true)} className="btn-primary">
-            <Plus size={16} /> {t('staff.add')}
-          </button>
+          <div className="flex gap-2">
+            <button onClick={() => exportStaff(staff)} className="btn-secondary">
+              <Download size={15} /> אקסל
+            </button>
+            <button onClick={() => setAddOpen(true)} className="btn-primary">
+              <Plus size={16} /> {t('staff.add')}
+            </button>
+          </div>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
