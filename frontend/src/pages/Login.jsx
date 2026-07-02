@@ -1,39 +1,35 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { signIn } from '../lib/auth'
+import { useAuth } from '../lib/AuthContext'
 import { Lock, Mail } from 'lucide-react'
 import LanguageToggle from '../components/LanguageToggle'
 
 export default function Login() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const { profile, loading: authLoading } = useAuth()
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
   const [error, setError]       = useState('')
   const [loading, setLoading]   = useState(false)
 
+  // ניווט אוטומטי ברגע שה-profile נטען
+  useEffect(() => {
+    if (!authLoading && profile) {
+      navigate(profile.role === 'staff' ? '/staff' : '/admin', { replace: true })
+    }
+  }, [profile, authLoading])
+
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
     setLoading(true)
-    const { data, error: err } = await signIn(email, password)
-    if (err) { setLoading(false); setError(err.message || t('auth.error')); return }
-
-    try {
-      const { supabase } = await import('../lib/supabase')
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { setLoading(false); setError('לא נמצא משתמש, נסה שוב'); return }
-      const { data: profile, error: profileErr } = await supabase
-        .from('profiles').select('role').eq('id', user.id).single()
-      setLoading(false)
-      if (profileErr) { setError('שגיאה בטעינת הפרופיל: ' + profileErr.message); return }
-      if (!profile) { setError('פרופיל לא נמצא - פנה למנהל'); return }
-      navigate(profile.role === 'staff' ? '/staff' : '/admin')
-    } catch (ex) {
-      setLoading(false)
-      setError('שגיאה: ' + ex.message)
-    }
+    const { error: err } = await signIn(email, password)
+    setLoading(false)
+    if (err) setError(err.message || t('auth.error'))
+    // הניווט יקרה דרך useEffect ברגע ש-AuthContext יטען את ה-profile
   }
 
   return (
@@ -43,14 +39,12 @@ export default function Login() {
       </div>
 
       <div className="w-full max-w-sm">
-        {/* Logo */}
         <div className="flex flex-col items-center mb-8">
           <img src="/racktive-icon.svg" alt="Racktive" className="h-16 w-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900">{t('app.name')}</h1>
           <p className="text-sm text-gray-500 mt-1">{t('auth.login')}</p>
         </div>
 
-        {/* Card */}
         <div className="card">
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
@@ -60,7 +54,7 @@ export default function Login() {
               <div className="relative">
                 <Mail size={16} className="absolute top-3 start-3.5 text-gray-400" />
                 <input
-                  type="email" required autoFocus
+                  type="email" required autoComplete="email"
                   value={email} onChange={e => setEmail(e.target.value)}
                   className="input ps-9"
                   placeholder="you@example.com"
@@ -75,7 +69,7 @@ export default function Login() {
               <div className="relative">
                 <Lock size={16} className="absolute top-3 start-3.5 text-gray-400" />
                 <input
-                  type="password" required
+                  type="password" required autoComplete="current-password"
                   value={password} onChange={e => setPassword(e.target.value)}
                   className="input ps-9"
                   placeholder="••••••••"
@@ -87,8 +81,8 @@ export default function Login() {
               <p className="text-sm text-red-500 bg-red-50 px-3 py-2 rounded-lg">{error}</p>
             )}
 
-            <button type="submit" disabled={loading} className="btn-primary w-full mt-1">
-              {loading ? t('auth.loggingIn') : t('auth.loginBtn')}
+            <button type="submit" disabled={loading || authLoading} className="btn-primary w-full mt-1">
+              {loading || authLoading ? t('auth.loggingIn') : t('auth.loginBtn')}
             </button>
           </form>
         </div>

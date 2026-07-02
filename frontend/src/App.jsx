@@ -6,8 +6,8 @@ import { Building2 } from 'lucide-react'
 import RacktiveLogo from './components/RacktiveLogo'
 
 function BranchPicker() {
-  const { profile, activeClub, availableClubs, switchClub } = useAuth()
-if (!profile || activeClub || availableClubs.length <= 1) return null
+  const { profile, activeClub, availableClubs, switchClub, loading } = useAuth()
+  if (loading || !profile || activeClub || availableClubs.length <= 1) return null
   return (
     <div className="fixed inset-0 z-50 bg-gray-50 flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-sm flex flex-col gap-6">
