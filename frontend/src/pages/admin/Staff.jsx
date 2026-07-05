@@ -26,6 +26,7 @@ export default function Staff() {
 
   const [staff, setStaff]       = useState([])
   const [allClubs, setAllClubs] = useState([])
+  const [staffStats, setStaffStats] = useState({}) // { [profileId]: { rentals, checkins } }
   const [loading, setLoading]   = useState(true)
   const [addOpen, setAddOpen]   = useState(false)
   const [addTab, setAddTab]     = useState('new') // 'new' | 'existing'
@@ -58,6 +59,24 @@ export default function Staff() {
       }
     }
     setStaff(list)
+
+    // load rental + checkin counts per staff member
+    const [{ data: rentalsData }, { data: checkinsData }] = await Promise.all([
+      supabase.from('rentals').select('rented_by').eq('club_id', activeClub.id),
+      supabase.from('checkins').select('checked_in_by').eq('club_id', activeClub.id),
+    ])
+    const stats = {}
+    for (const r of (rentalsData || [])) {
+      if (!r.rented_by) continue
+      stats[r.rented_by] = stats[r.rented_by] || { rentals: 0, checkins: 0 }
+      stats[r.rented_by].rentals++
+    }
+    for (const c of (checkinsData || [])) {
+      if (!c.checked_in_by) continue
+      stats[c.checked_in_by] = stats[c.checked_in_by] || { rentals: 0, checkins: 0 }
+      stats[c.checked_in_by].checkins++
+    }
+    setStaffStats(stats)
     setLoading(false)
   }
 
@@ -190,6 +209,7 @@ export default function Staff() {
           {staff.map(s => {
             const rb = roleBadge(s.role)
             const RIcon = rb.icon
+            const st = staffStats[s.id] || { rentals: 0, checkins: 0 }
             return (
               <div key={s.id} className="card flex flex-col gap-3">
                 <div className="flex items-start justify-between gap-2">
@@ -219,6 +239,17 @@ export default function Staff() {
                   </div>
                 </div>
                 {s.phone && <p className="text-xs text-gray-500 flex items-center gap-1"><Phone size={11} /> {s.phone}</p>}
+                <div className="flex gap-3 pt-1 border-t border-gray-100">
+                  <div className="text-center flex-1">
+                    <p className="text-lg font-bold text-gray-900">{st.rentals}</p>
+                    <p className="text-xs text-gray-400">השכרות</p>
+                  </div>
+                  <div className="w-px bg-gray-100" />
+                  <div className="text-center flex-1">
+                    <p className="text-lg font-bold text-gray-900">{st.checkins}</p>
+                    <p className="text-xs text-gray-400">צ׳ק אין</p>
+                  </div>
+                </div>
               </div>
             )
           })}

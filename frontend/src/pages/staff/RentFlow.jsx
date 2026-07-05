@@ -43,9 +43,12 @@ export default function RentFlow() {
       return
     }
 
-    // צ׳ק אין אוטומטי: +5 נקודות
+    // צ׳ק אין אוטומטי: +5 נקודות + רישום
     const newPoints = (data.points || 0) + 5
-    await supabase.from('customers').update({ points: newPoints }).eq('id', data.id)
+    await Promise.all([
+      supabase.from('customers').update({ points: newPoints }).eq('id', data.id),
+      supabase.from('checkins').insert({ club_id: clubId, customer_id: data.id, checked_in_by: profile.id }),
+    ])
     const updatedCustomer = { ...data, points: newPoints }
     setCustomer(updatedCustomer)
     setEarnedPoints(5)

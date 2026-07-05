@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/AuthContext'
 import Layout from '../../components/Layout'
 import Spinner from '../../components/Spinner'
-import { Search, ClipboardList, CheckCircle2, AlertTriangle, Clock } from 'lucide-react'
+import { Search, ClipboardList, CheckCircle2, AlertTriangle, Clock, UserCog } from 'lucide-react'
 
 export default function RentalHistory() {
   const { t }                   = useTranslation()
@@ -71,6 +71,11 @@ export default function RentalHistory() {
                   {new Date(r.started_at).toLocaleString('he-IL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                   {r.returned_at && ` · ${duration(r)}`}
                 </p>
+                {r.profiles?.full_name && (
+                  <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
+                    <UserCog size={10} /> {r.profiles.full_name}
+                  </p>
+                )}
               </div>
               <div className="shrink-0 text-end">
                 {!r.returned_at
