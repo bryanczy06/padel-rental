@@ -7,8 +7,9 @@ import Layout from '../../components/Layout'
 import Modal from '../../components/Modal'
 import QRCodeCard from '../../components/QRCodeCard'
 import Spinner from '../../components/Spinner'
-import { Plus, QrCode, Wrench, Check, CircleDot, Trash2, Archive, ArchiveRestore, ShieldCheck, Pencil, Download } from 'lucide-react'
+import { Plus, QrCode, Wrench, Check, CircleDot, Trash2, Archive, ArchiveRestore, ShieldCheck, Pencil, Download, Printer } from 'lucide-react'
 import { exportRackets } from '../../lib/exportExcel'
+import QRCode from 'qrcode'
 
 function StatusBadge({ status, t }) {
   const map = {
@@ -94,6 +95,48 @@ export default function Rackets() {
     load()
   }
 
+  async function printAllQR() {
+    const activeRackets = rackets.filter(r => !r.archived_at)
+    const labels = await Promise.all(activeRackets.map(async r => {
+      const url = await QRCode.toDataURL(r.qr_code, { width: 180, margin: 1 })
+      return { name: r.name, brand: r.brand || '', url }
+    }))
+
+    const html = `<!DOCTYPE html><html dir="rtl"><head><meta charset="utf-8">
+<title>ברקודים מחבטים</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #fff; }
+  .grid { display: flex; flex-wrap: wrap; gap: 6mm; padding: 8mm; }
+  .label {
+    width: 38mm; border: 1px dashed #bbb; border-radius: 4mm;
+    padding: 3mm; display: flex; flex-direction: column;
+    align-items: center; gap: 1.5mm; page-break-inside: avoid;
+  }
+  .label img { width: 32mm; height: 32mm; }
+  .label .name { font-size: 8pt; font-weight: bold; text-align: center; line-height: 1.2; }
+  .label .brand { font-size: 6.5pt; color: #666; text-align: center; }
+  @media print {
+    @page { margin: 5mm; size: A4; }
+    body { -webkit-print-color-adjust: exact; }
+  }
+</style></head><body>
+<div class="grid">
+${labels.map(l => `
+  <div class="label">
+    <img src="${l.url}" />
+    <div class="name">${l.name}</div>
+    ${l.brand ? `<div class="brand">${l.brand}</div>` : ''}
+  </div>`).join('')}
+</div>
+<script>window.onload = () => { window.print() }<\/script>
+</body></html>`
+
+    const win = window.open('', '_blank')
+    win.document.write(html)
+    win.document.close()
+  }
+
   async function savePrice() {
     const val = parseFloat(price)
     if (isNaN(val) || val < 0) return
@@ -130,6 +173,9 @@ export default function Rackets() {
             >
               <Archive size={15} />
               {showArchive ? 'פעילים' : `ארכיון (${archived.length})`}
+            </button>
+            <button onClick={printAllQR} className="btn-secondary text-sm">
+              <Printer size={15} /> הדפס ברקודים
             </button>
             <button onClick={() => exportRackets(rackets, activeClub?.price_per_rental, activeClub?.name)}
               className="btn-secondary text-sm">
