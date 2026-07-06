@@ -109,16 +109,16 @@ export default function Rackets() {
   body { font-family: Arial, sans-serif; background: #fff; }
   .grid {
     display: grid;
-    grid-template-columns: repeat(5, 33mm);
-    gap: 3mm;
+    grid-template-columns: repeat(6, 27mm);
+    gap: 2mm;
     padding: 5mm;
   }
   .label {
-    width: 33mm; border: 1px dashed #bbb; border-radius: 2mm;
+    width: 27mm; border: 1px dashed #bbb; border-radius: 2mm;
     padding: 1.5mm; display: flex; flex-direction: column;
     align-items: center; gap: 1mm; page-break-inside: avoid;
   }
-  .label img { width: 29mm; height: 29mm; display: block; }
+  .label img { width: 23mm; height: 23mm; display: block; }
   .label .name { font-size: 9pt; font-weight: bold; text-align: center; line-height: 1.2; }
   .label .brand { font-size: 7.5pt; color: #666; text-align: center; }
   @media print {
