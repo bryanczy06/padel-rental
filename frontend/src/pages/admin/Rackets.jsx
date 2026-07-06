@@ -98,7 +98,7 @@ export default function Rackets() {
   async function printAllQR() {
     const activeRackets = rackets.filter(r => !r.archived_at)
     const labels = await Promise.all(activeRackets.map(async r => {
-      const url = await QRCode.toDataURL(r.qr_code, { width: 180, margin: 1 })
+      const url = await QRCode.toDataURL(r.qr_code, { width: 120, margin: 1 })
       return { name: r.name, brand: r.brand || '', url }
     }))
 
@@ -109,13 +109,13 @@ export default function Rackets() {
   body { font-family: Arial, sans-serif; background: #fff; }
   .grid { display: flex; flex-wrap: wrap; gap: 6mm; padding: 8mm; }
   .label {
-    width: 38mm; border: 1px dashed #bbb; border-radius: 4mm;
-    padding: 3mm; display: flex; flex-direction: column;
-    align-items: center; gap: 1.5mm; page-break-inside: avoid;
+    width: 24mm; border: 1px dashed #bbb; border-radius: 3mm;
+    padding: 2mm; display: flex; flex-direction: column;
+    align-items: center; gap: 1mm; page-break-inside: avoid;
   }
-  .label img { width: 32mm; height: 32mm; }
-  .label .name { font-size: 8pt; font-weight: bold; text-align: center; line-height: 1.2; }
-  .label .brand { font-size: 6.5pt; color: #666; text-align: center; }
+  .label img { width: 20mm; height: 20mm; }
+  .label .name { font-size: 10pt; font-weight: bold; text-align: center; line-height: 1.2; }
+  .label .brand { font-size: 8pt; color: #666; text-align: center; }
   @media print {
     @page { margin: 5mm; size: A4; }
     body { -webkit-print-color-adjust: exact; }
