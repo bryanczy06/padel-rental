@@ -2,7 +2,32 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import QRCode from 'qrcode'
-import { Search, Star } from 'lucide-react'
+import { Search, Star, ChevronDown, ChevronUp } from 'lucide-react'
+
+const TERMS = {
+  he: {
+    title:   'תנאי שימוש — השכרת מחבט',
+    intro:   'בהרשמתך ל-Racktive, הינך מסכים/ה לתנאים הבאים:',
+    items: [
+      { label: 'נזק מכוון ₪500', text: 'פגיעה מכוונת במחבט, לרבות הטחתו ברצפה, בקיר, בקשת או בכל חלק אחר, תחויב בסך 500 ש״ח.' },
+      { label: 'גניבה או אובדן ₪900', text: 'גניבה או אובדן של המחבט יחויבו בסך 900 ש״ח.' },
+    ],
+    agree:   'קראתי ואני מסכים/ה לתנאי השימוש',
+    show:    'קרא תנאי שימוש',
+    hide:    'הסתר תנאי שימוש',
+  },
+  en: {
+    title:   'Terms of Use — Racket Rental',
+    intro:   'By registering with Racktive, you agree to the following terms:',
+    items: [
+      { label: '₪500 Intentional Damage', text: 'Any intentional damage to the racket, including smashing it against the floor, wall, net, or any other surface, will result in a charge of ₪500 (NIS).' },
+      { label: '₪900 Theft or Loss', text: 'Theft or loss of the racket will result in a charge of ₪900 (NIS).' },
+    ],
+    agree:   'I have read and agree to the Terms of Use',
+    show:    'Read Terms of Use',
+    hide:    'Hide Terms of Use',
+  },
+}
 
 const STORAGE_KEY = 'padel_customer_id'
 
@@ -75,6 +100,8 @@ export default function CustomerPortal() {
   const [joinQrUrl, setJoinQrUrl]       = useState('')
   const [saving, setSaving]     = useState(false)
   const [joinError, setJoinError] = useState('')
+  const [agreedTerms, setAgreedTerms] = useState(false)
+  const [showTerms, setShowTerms]     = useState(false)
 
   useEffect(() => {
     async function init() {
@@ -110,7 +137,7 @@ export default function CustomerPortal() {
 
   async function handleRegister(e) {
     e.preventDefault()
-    if (!form.full_name.trim()) return
+    if (!form.full_name.trim() || !agreedTerms) return
     setSaving(true)
     setJoinError('')
     const { data, error: err } = await supabase.from('customers')
@@ -239,8 +266,35 @@ export default function CustomerPortal() {
                       onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                       className="input" placeholder="you@example.com" />
                   </div>
+                  {/* Terms of use */}
+                  <div className="border border-gray-200 rounded-xl overflow-hidden">
+                    <button type="button"
+                      onClick={() => setShowTerms(v => !v)}
+                      className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors">
+                      <span>{TERMS[lang].show}</span>
+                      {showTerms ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </button>
+                    {showTerms && (
+                      <div className="px-4 py-3 flex flex-col gap-3 bg-white text-xs text-gray-600" dir={dir}>
+                        <p className="font-medium text-gray-700">{TERMS[lang].intro}</p>
+                        {TERMS[lang].items.map(item => (
+                          <div key={item.label} className="bg-red-50 rounded-lg px-3 py-2">
+                            <p className="font-semibold text-red-700 mb-0.5">{item.label}</p>
+                            <p>{item.text}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <label className="flex items-start gap-3 cursor-pointer select-none">
+                    <input type="checkbox" checked={agreedTerms}
+                      onChange={e => setAgreedTerms(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600 accent-brand-600 shrink-0" />
+                    <span className="text-sm text-gray-700">{TERMS[lang].agree}</span>
+                  </label>
                   {joinError && <p className="text-sm text-red-500 bg-red-50 px-3 py-2 rounded-lg">{joinError}</p>}
-                  <button type="submit" disabled={saving} className="btn-primary w-full mt-1">
+                  <button type="submit" disabled={saving || !agreedTerms}
+                    className="btn-primary w-full mt-1 disabled:opacity-50 disabled:cursor-not-allowed">
                     {saving ? t.submitting : t.submit}
                   </button>
                 </form>
