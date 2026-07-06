@@ -263,7 +263,7 @@ export default function RentFlow() {
               <h2 className="font-semibold text-gray-900 flex items-center gap-2">
                 <CircleDot size={18} className="text-brand-600" /> {t('rent.scanRacket')}
               </h2>
-              {loading ? <Spinner /> : <QRScanner onResult={handleRacketQR} />}
+              {loading ? <Spinner /> : <QRScanner onResult={handleRacketQR} large />}
             </div>
             <button onClick={() => setStep(STEP.CHECKIN)} className="btn-secondary w-full">
               {t('common.back')}
