@@ -29,7 +29,21 @@ export default function QRScanner({ onResult, onClose, large = false }) {
               () => {}
             )
           })
-          .then(() => { setLoading(false) })
+          .then(() => {
+            setLoading(false)
+            if (large) {
+              // apply 2× zoom on the active camera track
+              const video = document.querySelector(`#${id.current} video`)
+              if (video?.srcObject) {
+                const track = video.srcObject.getVideoTracks()[0]
+                const caps = track?.getCapabilities?.()
+                if (caps?.zoom) {
+                  const zoom = Math.min(2, caps.zoom.max)
+                  track.applyConstraints({ advanced: [{ zoom }] }).catch(() => {})
+                }
+              }
+            }
+          })
           .catch(e => { setError(e.message || 'שגיאת מצלמה'); setLoading(false); setStarted(false) })
       } catch(e) {
         setError(e.message || 'שגיאה'); setLoading(false); setStarted(false)
