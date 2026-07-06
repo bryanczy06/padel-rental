@@ -109,20 +109,20 @@ export default function Rackets() {
   body { font-family: Arial, sans-serif; background: #fff; }
   .grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 4mm;
-    padding: 6mm;
+    grid-template-columns: repeat(5, 33mm);
+    gap: 3mm;
+    padding: 5mm;
   }
   .label {
-    border: 1px dashed #bbb; border-radius: 2.5mm;
-    padding: 2mm; display: flex; flex-direction: column;
+    width: 33mm; border: 1px dashed #bbb; border-radius: 2mm;
+    padding: 1.5mm; display: flex; flex-direction: column;
     align-items: center; gap: 1mm; page-break-inside: avoid;
   }
-  .label img { width: 100%; height: auto; display: block; }
+  .label img { width: 29mm; height: 29mm; display: block; }
   .label .name { font-size: 9pt; font-weight: bold; text-align: center; line-height: 1.2; }
   .label .brand { font-size: 7.5pt; color: #666; text-align: center; }
   @media print {
-    @page { margin: 5mm; size: A4; }
+    @page { margin: 4mm; size: A4 portrait; }
     body { -webkit-print-color-adjust: exact; }
   }
 </style></head><body>
