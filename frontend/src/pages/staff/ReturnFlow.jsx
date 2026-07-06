@@ -90,7 +90,7 @@ export default function ReturnFlow() {
             <h2 className="font-semibold text-gray-900 flex items-center gap-2">
               <CircleDot size={18} className="text-brand-600" /> {t('return.scanRacket')}
             </h2>
-            {loading ? <Spinner /> : <QRScanner onResult={handleRacketQR} />}
+            {loading ? <Spinner /> : <QRScanner onResult={handleRacketQR} large />}
           </div>
         )}
 
