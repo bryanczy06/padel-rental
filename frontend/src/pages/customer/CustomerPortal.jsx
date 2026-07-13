@@ -102,6 +102,7 @@ export default function CustomerPortal() {
   const [joinError, setJoinError] = useState('')
   const [agreedTerms, setAgreedTerms] = useState(false)
   const [showTerms, setShowTerms]     = useState(false)
+  const [termsOpened, setTermsOpened] = useState(false)
 
   useEffect(() => {
     async function init() {
@@ -269,7 +270,7 @@ export default function CustomerPortal() {
                   {/* Terms of use */}
                   <div className="border border-gray-200 rounded-xl overflow-hidden">
                     <button type="button"
-                      onClick={() => setShowTerms(v => !v)}
+                      onClick={() => { setShowTerms(v => !v); setTermsOpened(true) }}
                       className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors">
                       <span>{TERMS[lang].show}</span>
                       {showTerms ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -286,11 +287,14 @@ export default function CustomerPortal() {
                       </div>
                     )}
                   </div>
-                  <label className="flex items-start gap-3 cursor-pointer select-none">
-                    <input type="checkbox" checked={agreedTerms}
+                  <label className={`flex items-start gap-3 select-none ${termsOpened ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}>
+                    <input type="checkbox" checked={agreedTerms} disabled={!termsOpened}
                       onChange={e => setAgreedTerms(e.target.checked)}
                       className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600 accent-brand-600 shrink-0" />
-                    <span className="text-sm text-gray-700">{TERMS[lang].agree}</span>
+                    <span className="text-sm text-gray-700">
+                      {TERMS[lang].agree}
+                      {!termsOpened && <span className="block text-xs text-gray-400 mt-0.5">{lang === 'he' ? '(יש לפתוח ולקרוא את התנאים תחילה)' : '(please open and read the terms first)'}</span>}
+                    </span>
                   </label>
                   {joinError && <p className="text-sm text-red-500 bg-red-50 px-3 py-2 rounded-lg">{joinError}</p>}
                   <button type="submit" disabled={saving || !agreedTerms}
