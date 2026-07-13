@@ -34,7 +34,7 @@ export default function Staff() {
   const [editOpen, setEditOpen] = useState(false)
   const [editTarget, setEditTarget] = useState(null)
   const [form, setForm]         = useState({ full_name: '', email: '', phone: '', password: '', role: 'staff' })
-  const [editForm, setEditForm] = useState({ role: 'staff', club_id: '' })
+  const [editForm, setEditForm] = useState({ full_name: '', phone: '', email: '', role: 'staff', club_id: '' })
   const [saving, setSaving]     = useState(false)
 
   async function load() {
@@ -147,7 +147,12 @@ export default function Staff() {
   async function saveEdit(e) {
     e.preventDefault()
     setSaving(true)
-    const updates = { role: editForm.role }
+    const updates = {
+      full_name: editForm.full_name,
+      phone:     editForm.phone,
+      email:     editForm.email,
+      role:      editForm.role,
+    }
     if (canManageClubs && editForm.club_id) updates.club_id = editForm.club_id
     const { error } = await supabase.from('profiles').update(updates).eq('id', editTarget.id)
     setSaving(false)
@@ -184,7 +189,7 @@ export default function Staff() {
 
   function openEdit(s) {
     setEditTarget(s)
-    setEditForm({ role: s.role, club_id: s.club_id || activeClub.id })
+    setEditForm({ full_name: s.full_name || '', phone: s.phone || '', email: s.email || '', role: s.role, club_id: s.club_id || activeClub.id })
     setEditOpen(true)
   }
 
@@ -332,7 +337,25 @@ export default function Staff() {
       <Modal open={editOpen} onClose={() => setEditOpen(false)} title={`עריכה — ${editTarget?.full_name}`}>
         <form onSubmit={saveEdit} className="flex flex-col gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">תפקיד</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('staff.fullName')} *</label>
+            <input required value={editForm.full_name}
+              onChange={e => setEditForm(f => ({ ...f, full_name: e.target.value }))}
+              className="input" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('staff.phone')}</label>
+            <input type="tel" value={editForm.phone}
+              onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))}
+              className="input" placeholder="050-0000000" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('staff.email')}</label>
+            <input type="email" value={editForm.email}
+              onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))}
+              className="input" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('staff.role')}</label>
             <select value={editForm.role} onChange={e => setEditForm(f => ({ ...f, role: e.target.value }))} className="input">
               <option value="staff">עובד</option>
               <option value="admin">מנהל</option>
