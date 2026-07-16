@@ -6,7 +6,7 @@ import LanguageToggle from './LanguageToggle'
 import {
   LayoutDashboard, CircleDot, Users, UserCog,
   ClipboardList, LogOut, Menu, X, ShieldCheck,
-  Building2, ChevronDown, Phone
+  Building2, ChevronDown, Phone, ArrowLeftRight
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
@@ -163,7 +163,7 @@ export default function Navbar() {
       {open && (
         <div className="lg:hidden fixed inset-0 z-20 pt-14">
           <div className="absolute inset-0 bg-black/20" onClick={() => setOpen(false)} />
-          <nav className="relative bg-white h-full w-64 p-4 flex flex-col gap-1 shadow-xl">
+          <nav className="relative bg-white h-full w-64 p-4 flex flex-col gap-1 shadow-xl overflow-y-auto">
             {!canSwitch && activeClub && (
               <p className="text-xs text-gray-400 px-3 mb-2 truncate">{activeClub.name}</p>
             )}
@@ -181,6 +181,13 @@ export default function Navbar() {
                 Super Admin
               </Link>
             )}
+            {/* Swap racket button — all logged-in users */}
+            <Link to="/staff/swap" onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 transition-colors mt-2">
+              <ArrowLeftRight size={18} className="text-amber-600" />
+              החלף מחבט
+            </Link>
+
             {/* Active rentals — staff only */}
             {!isAdmin && (
               <div className="mt-3 border-t border-gray-100 pt-3 flex flex-col gap-2">

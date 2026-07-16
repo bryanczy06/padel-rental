@@ -43,6 +43,7 @@ import Login           from './pages/Login'
 import StaffDashboard  from './pages/staff/StaffDashboard'
 import RentFlow        from './pages/staff/RentFlow'
 import ReturnFlow      from './pages/staff/ReturnFlow'
+import SwapFlow        from './pages/staff/SwapFlow'
 import AdminDashboard  from './pages/admin/AdminDashboard'
 import Rackets         from './pages/admin/Rackets'
 import Customers       from './pages/admin/Customers'
@@ -72,6 +73,9 @@ export default function App() {
             } />
             <Route path="/staff/return" element={
               <ProtectedRoute roles={ALL}><ReturnFlow /></ProtectedRoute>
+            } />
+            <Route path="/staff/swap" element={
+              <ProtectedRoute roles={ALL}><SwapFlow /></ProtectedRoute>
             } />
 
             {/* Admin routes */}
