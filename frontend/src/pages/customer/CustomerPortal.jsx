@@ -256,8 +256,8 @@ export default function CustomerPortal() {
                       className="input" placeholder={t.namePh} />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">{t.phone}</label>
-                    <input type="tel" value={form.phone}
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">{t.phone} *</label>
+                    <input type="tel" required value={form.phone}
                       onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
                       className="input" placeholder="050-0000000" />
                   </div>
