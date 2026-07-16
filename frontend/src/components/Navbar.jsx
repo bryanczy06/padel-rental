@@ -6,9 +6,10 @@ import LanguageToggle from './LanguageToggle'
 import {
   LayoutDashboard, CircleDot, Users, UserCog,
   ClipboardList, LogOut, Menu, X, ShieldCheck,
-  Building2, ChevronDown
+  Building2, ChevronDown, Phone
 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { supabase } from '../lib/supabase'
 
 export default function Navbar() {
   const { t } = useTranslation()
@@ -17,6 +18,17 @@ export default function Navbar() {
   const navigate   = useNavigate()
   const [open, setOpen]           = useState(false)
   const [clubPicker, setClubPicker] = useState(false)
+  const [activeRentals, setActiveRentals] = useState([])
+
+  useEffect(() => {
+    if (!open || isAdmin || !activeClub?.id) return
+    supabase.from('rentals')
+      .select('id, started_at, customers(full_name, phone), rackets(name)')
+      .eq('club_id', activeClub.id)
+      .is('returned_at', null)
+      .order('started_at', { ascending: false })
+      .then(({ data }) => setActiveRentals(data || []))
+  }, [open, activeClub?.id])
 
   const isAdmin      = ['admin', 'super_admin', 'owner'].includes(profile?.role)
   const isSuperAdmin = profile?.role === 'super_admin'
@@ -169,6 +181,30 @@ export default function Navbar() {
                 Super Admin
               </Link>
             )}
+            {/* Active rentals — staff only */}
+            {!isAdmin && (
+              <div className="mt-3 border-t border-gray-100 pt-3 flex flex-col gap-2">
+                <p className="text-xs font-semibold text-gray-400 px-1">מושכרים כרגע ({activeRentals.length})</p>
+                {activeRentals.length === 0
+                  ? <p className="text-xs text-gray-400 px-1">אין השכרות פעילות</p>
+                  : activeRentals.map(r => (
+                    <div key={r.id} className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">{r.customers?.full_name}</p>
+                        <p className="text-xs text-gray-500 truncate">{r.rackets?.name}</p>
+                      </div>
+                      {r.customers?.phone && (
+                        <a href={`tel:${r.customers.phone}`}
+                          className="p-1.5 text-brand-600 hover:bg-brand-50 rounded-lg transition-colors shrink-0">
+                          <Phone size={16} />
+                        </a>
+                      )}
+                    </div>
+                  ))
+                }
+              </div>
+            )}
+
             <div className="mt-auto border-t border-gray-100 pt-4">
               <button onClick={handleLogout}
                 className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-gray-600 hover:bg-gray-50 w-full">
