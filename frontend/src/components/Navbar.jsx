@@ -198,7 +198,9 @@ export default function Navbar() {
                     <div key={r.id} className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">{r.customers?.full_name}</p>
-                        <p className="text-xs text-gray-500 truncate">{r.rackets?.name}</p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {r.rackets?.name} · {new Date(r.started_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+                        </p>
                       </div>
                       {r.customers?.phone && (
                         <a href={`tel:${r.customers.phone}`}
