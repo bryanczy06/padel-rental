@@ -94,23 +94,24 @@ export default function AdminDashboard() {
       })
       setChart(buckets.map(d => ({ name: d.date, rentals: counts[d.key] || 0 })))
 
-      // ── לקוחות חדשים מול חוזרים החודש ──
-      const { data: monthCheckins } = await supabase.from('checkins')
+      // ── לקוחות חדשים מול חוזרים — לפי התקופה הנבחרת ──
+      const periodStart = buckets[0].key
+      const { data: periodCheckins } = await supabase.from('checkins')
         .select('customer_id, created_at')
         .eq('club_id', activeClub.id)
-        .gte('created_at', monthStart)
-      const monthCustomerIds = [...new Set((monthCheckins || []).map(c => c.customer_id))]
+        .gte('created_at', periodStart)
+      const periodCustomerIds = [...new Set((periodCheckins || []).map(c => c.customer_id))]
 
       let returningIds = new Set()
-      if (monthCustomerIds.length) {
+      if (periodCustomerIds.length) {
         const { data: priorCheckins } = await supabase.from('checkins')
           .select('customer_id')
           .eq('club_id', activeClub.id)
-          .lt('created_at', monthStart)
-          .in('customer_id', monthCustomerIds)
+          .lt('created_at', periodStart)
+          .in('customer_id', periodCustomerIds)
         returningIds = new Set((priorCheckins || []).map(c => c.customer_id))
       }
-      const newCount = monthCustomerIds.filter(id => !returningIds.has(id)).length
+      const newCount = periodCustomerIds.filter(id => !returningIds.has(id)).length
       const returningCount = returningIds.size
       setCustomerSplit([
         { name: 'לקוחות חדשים', value: newCount, fill: '#16a34a' },
@@ -263,10 +264,10 @@ export default function AdminDashboard() {
 
         {/* New vs returning customers */}
         <div className="card">
-          <h2 className="font-semibold text-gray-900 mb-1">לקוחות חדשים מול חוזרים — החודש</h2>
-          <p className="text-xs text-gray-400 mb-4">חוזר = לקוח שביצע צ׳ק אין גם לפני החודש הנוכחי</p>
+          <h2 className="font-semibold text-gray-900 mb-1">לקוחות חדשים מול חוזרים — {PERIODS.find(p => p.key === period)?.label} אחרונים</h2>
+          <p className="text-xs text-gray-400 mb-4">חוזר = לקוח שביצע צ׳ק אין גם לפני תחילת התקופה</p>
           {customerSplit.every(s => s.value === 0) ? (
-            <p className="text-sm text-gray-400 py-6 text-center">אין נתוני צ׳ק אין החודש</p>
+            <p className="text-sm text-gray-400 py-6 text-center">אין נתוני צ׳ק אין בתקופה זו</p>
           ) : (
             <div className="flex flex-col sm:flex-row items-center gap-4">
               <ResponsiveContainer width="100%" height={180} className="sm:max-w-[180px]">
