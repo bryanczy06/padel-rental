@@ -124,9 +124,10 @@ export default function AdminDashboard() {
         .not('returned_at', 'is', null)
         .gte('started_at', buckets[0].key)
 
+      const MAX_DURATION_MIN = 3 * 60 // מחבטים שלא הוחזרו תוך 3 שעות (אבדן/גניבה) לא יעוותו את הממוצע
       const durByBucket = {}
       ;(completedRentals || []).forEach(r => {
-        const mins = (new Date(r.returned_at) - new Date(r.started_at)) / 60000
+        const mins = Math.min((new Date(r.returned_at) - new Date(r.started_at)) / 60000, MAX_DURATION_MIN)
         const k = r.started_at.slice(0, sliceLen)
         if (!durByBucket[k]) durByBucket[k] = []
         durByBucket[k].push(mins)
