@@ -13,6 +13,7 @@ export default function AdminDashboard() {
   const [stats, setStats]     = useState(null)
   const [overdue, setOverdue] = useState([])
   const [chartData, setChart] = useState([])
+  const [revenueChart, setRevenueChart] = useState([])
   const [customerSplit, setCustomerSplit] = useState([])
   const [durationChart, setDurationChart]  = useState([])
   const [avgDurationMin, setAvgDurationMin] = useState(null)
@@ -25,25 +26,30 @@ export default function AdminDashboard() {
     { key: '12m', label: '12 חודשים' },
   ]
 
+  // בונה טווחים לפי UTC בלבד — שימוש בזמן מקומי כאן היה גורם לפער של יום/חודש שלם
+  // ליד חצות (toISOString ממיר לשעון UTC, מה שיכול "לגלוש" ליום/חודש הקודם)
   function buildBuckets(p) {
+    const now = new Date()
     if (p === '12m') {
       const months = []
       for (let i = 11; i >= 0; i--) {
-        const d = new Date()
-        d.setDate(1)
-        d.setMonth(d.getMonth() - i)
+        const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1))
         const key = d.toISOString().slice(0, 7) // YYYY-MM — used for grouping
-        months.push({ date: d.toLocaleDateString('he-IL', { month: 'short' }), key, start: d.toISOString() })
+        months.push({ date: d.toLocaleDateString('he-IL', { month: 'short', timeZone: 'UTC' }), key, start: d.toISOString() })
       }
       return { buckets: months, monthly: true }
     }
     const n = p === '30d' ? 29 : 6
     const days = []
     for (let i = n; i >= 0; i--) {
-      const d = new Date()
-      d.setDate(d.getDate() - i)
+      const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - i))
       const key = d.toISOString().slice(0, 10)
-      days.push({ date: p === '30d' ? d.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' }) : d.toLocaleDateString('he-IL', { weekday: 'short' }), key, start: d.toISOString() })
+      days.push({
+        date: p === '30d'
+          ? d.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric', timeZone: 'UTC' })
+          : d.toLocaleDateString('he-IL', { weekday: 'short', timeZone: 'UTC' }),
+        key, start: d.toISOString(),
+      })
     }
     return { buckets: days, monthly: false }
   }
@@ -93,6 +99,9 @@ export default function AdminDashboard() {
         counts[k] = (counts[k] || 0) + 1
       })
       setChart(buckets.map(d => ({ name: d.date, rentals: counts[d.key] || 0 })))
+      setRevenueChart(price != null
+        ? buckets.map(d => ({ name: d.date, revenue: (counts[d.key] || 0) * price }))
+        : [])
 
       // ── לקוחות חדשים מול חוזרים — לפי התקופה הנבחרת ──
       const periodStart = buckets[0].start
@@ -261,6 +270,25 @@ export default function AdminDashboard() {
             </BarChart>
           </ResponsiveContainer>
         </div>
+
+        {/* Revenue chart */}
+        {revenueChart.length > 0 && (
+          <div className="card">
+            <h2 className="font-semibold text-gray-900 mb-4">הכנסות — {PERIODS.find(p => p.key === period)?.label} אחרונים</h2>
+            <ResponsiveContainer width="100%" height={180}>
+              <BarChart data={revenueChart} barSize={period === '30d' ? 12 : 28}>
+                <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#9ca3af' }} axisLine={false} tickLine={false} interval={period === '30d' ? 2 : 0} />
+                <YAxis hide allowDecimals={false} />
+                <Tooltip
+                  formatter={(v) => [`₪${v.toLocaleString()}`, 'הכנסות']}
+                  contentStyle={{ borderRadius: '0.75rem', border: 'none', boxShadow: '0 4px 24px #0002', fontSize: 13 }}
+                  cursor={{ fill: '#ecfdf5' }}
+                />
+                <Bar dataKey="revenue" fill="#059669" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
 
         {/* New vs returning customers */}
         <div className="card">
