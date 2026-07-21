@@ -17,6 +17,36 @@ export default function AdminDashboard() {
   const [durationChart, setDurationChart]  = useState([])
   const [avgDurationMin, setAvgDurationMin] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [period, setPeriod]   = useState('7d') // '7d' | '30d' | '12m'
+
+  const PERIODS = [
+    { key: '7d',  label: '7 ימים' },
+    { key: '30d', label: '30 ימים' },
+    { key: '12m', label: '12 חודשים' },
+  ]
+
+  function buildBuckets(p) {
+    if (p === '12m') {
+      const months = []
+      for (let i = 11; i >= 0; i--) {
+        const d = new Date()
+        d.setDate(1)
+        d.setMonth(d.getMonth() - i)
+        const key = d.toISOString().slice(0, 7) // YYYY-MM
+        months.push({ date: d.toLocaleDateString('he-IL', { month: 'short' }), key })
+      }
+      return { buckets: months, monthly: true }
+    }
+    const n = p === '30d' ? 29 : 6
+    const days = []
+    for (let i = n; i >= 0; i--) {
+      const d = new Date()
+      d.setDate(d.getDate() - i)
+      const key = d.toISOString().slice(0, 10)
+      days.push({ date: p === '30d' ? d.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' }) : d.toLocaleDateString('he-IL', { weekday: 'short' }), key })
+    }
+    return { buckets: days, monthly: false }
+  }
 
   useEffect(() => {
     if (!activeClub?.id) return
@@ -52,22 +82,17 @@ export default function AdminDashboard() {
       const TWO_HOURS = 2 * 60 * 60 * 1000
       setOverdue(open.filter(r => Date.now() - new Date(r.started_at) > TWO_HOURS))
 
-      const days = []
-      for (let i = 6; i >= 0; i--) {
-        const d = new Date()
-        d.setDate(d.getDate() - i)
-        const key = d.toISOString().slice(0, 10)
-        days.push({ date: d.toLocaleDateString('he-IL', { weekday: 'short' }), key })
-      }
-      const weekRes = await supabase.from('rentals').select('started_at')
+      const { buckets, monthly } = buildBuckets(period)
+      const sliceLen = monthly ? 7 : 10
+      const rangeRes = await supabase.from('rentals').select('started_at')
         .eq('club_id', activeClub.id)
-        .gte('started_at', days[0].key)
+        .gte('started_at', buckets[0].key)
       const counts = {}
-      ;(weekRes.data || []).forEach(r => {
-        const k = r.started_at.slice(0, 10)
+      ;(rangeRes.data || []).forEach(r => {
+        const k = r.started_at.slice(0, sliceLen)
         counts[k] = (counts[k] || 0) + 1
       })
-      setChart(days.map(d => ({ name: d.date, rentals: counts[d.key] || 0 })))
+      setChart(buckets.map(d => ({ name: d.date, rentals: counts[d.key] || 0 })))
 
       // ── לקוחות חדשים מול חוזרים החודש ──
       const { data: monthCheckins } = await supabase.from('checkins')
@@ -97,27 +122,27 @@ export default function AdminDashboard() {
         .select('started_at, returned_at')
         .eq('club_id', activeClub.id)
         .not('returned_at', 'is', null)
-        .gte('started_at', days[0].key)
+        .gte('started_at', buckets[0].key)
 
-      const durByDay = {}
+      const durByBucket = {}
       ;(completedRentals || []).forEach(r => {
         const mins = (new Date(r.returned_at) - new Date(r.started_at)) / 60000
-        const k = r.started_at.slice(0, 10)
-        if (!durByDay[k]) durByDay[k] = []
-        durByDay[k].push(mins)
+        const k = r.started_at.slice(0, sliceLen)
+        if (!durByBucket[k]) durByBucket[k] = []
+        durByBucket[k].push(mins)
       })
-      setDurationChart(days.map(d => {
-        const arr = durByDay[d.key] || []
+      setDurationChart(buckets.map(d => {
+        const arr = durByBucket[d.key] || []
         const avg = arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : 0
         return { name: d.date, minutes: avg }
       }))
-      const allMins = Object.values(durByDay).flat()
+      const allMins = Object.values(durByBucket).flat()
       setAvgDurationMin(allMins.length ? Math.round(allMins.reduce((a, b) => a + b, 0) / allMins.length) : null)
 
       setLoading(false)
     }
     load()
-  }, [activeClub?.id])
+  }, [activeClub?.id, period])
 
   if (loading) return <Layout><Spinner /></Layout>
 
@@ -207,12 +232,24 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        {/* Period selector */}
+        <div className="flex bg-white border border-gray-200 rounded-xl p-1 gap-1 self-start">
+          {PERIODS.map(p => (
+            <button key={p.key} onClick={() => setPeriod(p.key)}
+              className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                period === p.key ? 'bg-brand-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              }`}>
+              {p.label}
+            </button>
+          ))}
+        </div>
+
         {/* Chart */}
         <div className="card">
-          <h2 className="font-semibold text-gray-900 mb-4">השכרות — 7 ימים אחרונים</h2>
+          <h2 className="font-semibold text-gray-900 mb-4">השכרות — {PERIODS.find(p => p.key === period)?.label} אחרונים</h2>
           <ResponsiveContainer width="100%" height={180}>
-            <BarChart data={chartData} barSize={28}>
-              <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+            <BarChart data={chartData} barSize={period === '30d' ? 12 : 28}>
+              <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#9ca3af' }} axisLine={false} tickLine={false} interval={period === '30d' ? 2 : 0} />
               <YAxis hide allowDecimals={false} />
               <Tooltip
                 contentStyle={{ borderRadius: '0.75rem', border: 'none', boxShadow: '0 4px 24px #0002', fontSize: 13 }}
@@ -262,7 +299,7 @@ export default function AdminDashboard() {
         {/* Average rental duration */}
         <div className="card">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-gray-900">זמן השכרה ממוצע — 7 ימים אחרונים</h2>
+            <h2 className="font-semibold text-gray-900">זמן השכרה ממוצע — {PERIODS.find(p => p.key === period)?.label} אחרונים</h2>
             {avgDurationMin != null && (
               <span className="text-sm font-bold text-brand-700 bg-brand-50 px-3 py-1 rounded-lg">
                 ממוצע: {avgDurationMin} דק׳
@@ -270,11 +307,11 @@ export default function AdminDashboard() {
             )}
           </div>
           {avgDurationMin == null ? (
-            <p className="text-sm text-gray-400 py-6 text-center">אין השכרות שהוחזרו בשבוע האחרון</p>
+            <p className="text-sm text-gray-400 py-6 text-center">אין השכרות שהוחזרו בתקופה זו</p>
           ) : (
             <ResponsiveContainer width="100%" height={180}>
-              <BarChart data={durationChart} barSize={28}>
-                <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+              <BarChart data={durationChart} barSize={period === '30d' ? 12 : 28}>
+                <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#9ca3af' }} axisLine={false} tickLine={false} interval={period === '30d' ? 2 : 0} />
                 <YAxis hide allowDecimals={false} />
                 <Tooltip
                   formatter={(v) => [`${v} דק׳`, 'ממוצע']}

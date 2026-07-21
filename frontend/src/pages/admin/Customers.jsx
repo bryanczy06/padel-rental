@@ -7,7 +7,7 @@ import Layout from '../../components/Layout'
 import Modal from '../../components/Modal'
 import QRCodeCard from '../../components/QRCodeCard'
 import Spinner from '../../components/Spinner'
-import { Plus, QrCode, Search, Users, Phone, Mail, ClipboardList, Trash2, AlertTriangle, Star, Download } from 'lucide-react'
+import { Plus, QrCode, Search, Users, Phone, Mail, ClipboardList, Trash2, AlertTriangle, Star, Download, Building2 } from 'lucide-react'
 import { exportCustomers } from '../../lib/exportExcel'
 
 export default function Customers() {
@@ -16,6 +16,7 @@ export default function Customers() {
   const toast       = useToast()
   const [customers, setCustomers] = useState([])
   const [damagedIds, setDamagedIds] = useState(new Set())
+  const [clubsById, setClubsById] = useState({})
   const [loading, setLoading]     = useState(true)
   const [search, setSearch]       = useState('')
   const [addOpen, setAddOpen]     = useState(false)
@@ -39,6 +40,12 @@ export default function Customers() {
   }
 
   useEffect(() => { load() }, [activeClub?.id])
+
+  useEffect(() => {
+    supabase.from('clubs').select('id, name').then(({ data }) => {
+      setClubsById(Object.fromEntries((data || []).map(c => [c.id, c.name])))
+    })
+  }, [])
 
   const filtered = customers.filter(c => {
     const q = search.toLowerCase()
@@ -125,6 +132,10 @@ export default function Customers() {
                     {c.email && <p className="text-xs text-gray-500 flex items-center gap-1"><Mail size={11} /> {c.email}</p>}
                     <p className="text-xs text-amber-600 flex items-center gap-1 mt-0.5">
                       <Star size={11} className="fill-amber-400" /> {c.points ?? 0} נקודות
+                    </p>
+                    <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
+                      <Building2 size={11} />
+                      {c.home_club_id ? (clubsById[c.home_club_id] || '—') : 'לא ידוע'}
                     </p>
                   </div>
                 </div>
