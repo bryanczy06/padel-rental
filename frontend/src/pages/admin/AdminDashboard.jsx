@@ -4,8 +4,8 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/AuthContext'
 import Layout from '../../components/Layout'
 import Spinner from '../../components/Spinner'
-import { CircleDot, Users, Clock, TrendingUp, AlertTriangle, Phone, Banknote } from 'lucide-react'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
+import { CircleDot, Users, Clock, TrendingUp, AlertTriangle, Phone, Banknote, UserPlus, Repeat } from 'lucide-react'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
 
 export default function AdminDashboard() {
   const { t }                    = useTranslation()
@@ -13,6 +13,9 @@ export default function AdminDashboard() {
   const [stats, setStats]     = useState(null)
   const [overdue, setOverdue] = useState([])
   const [chartData, setChart] = useState([])
+  const [customerSplit, setCustomerSplit] = useState([])
+  const [durationChart, setDurationChart]  = useState([])
+  const [avgDurationMin, setAvgDurationMin] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -65,6 +68,52 @@ export default function AdminDashboard() {
         counts[k] = (counts[k] || 0) + 1
       })
       setChart(days.map(d => ({ name: d.date, rentals: counts[d.key] || 0 })))
+
+      // ── לקוחות חדשים מול חוזרים החודש ──
+      const { data: monthCheckins } = await supabase.from('checkins')
+        .select('customer_id, created_at')
+        .eq('club_id', activeClub.id)
+        .gte('created_at', monthStart)
+      const monthCustomerIds = [...new Set((monthCheckins || []).map(c => c.customer_id))]
+
+      let returningIds = new Set()
+      if (monthCustomerIds.length) {
+        const { data: priorCheckins } = await supabase.from('checkins')
+          .select('customer_id')
+          .eq('club_id', activeClub.id)
+          .lt('created_at', monthStart)
+          .in('customer_id', monthCustomerIds)
+        returningIds = new Set((priorCheckins || []).map(c => c.customer_id))
+      }
+      const newCount = monthCustomerIds.filter(id => !returningIds.has(id)).length
+      const returningCount = returningIds.size
+      setCustomerSplit([
+        { name: 'לקוחות חדשים', value: newCount, fill: '#16a34a' },
+        { name: 'לקוחות חוזרים', value: returningCount, fill: '#3b82f6' },
+      ])
+
+      // ── זמן השכרה ממוצע ──
+      const { data: completedRentals } = await supabase.from('rentals')
+        .select('started_at, returned_at')
+        .eq('club_id', activeClub.id)
+        .not('returned_at', 'is', null)
+        .gte('started_at', days[0].key)
+
+      const durByDay = {}
+      ;(completedRentals || []).forEach(r => {
+        const mins = (new Date(r.returned_at) - new Date(r.started_at)) / 60000
+        const k = r.started_at.slice(0, 10)
+        if (!durByDay[k]) durByDay[k] = []
+        durByDay[k].push(mins)
+      })
+      setDurationChart(days.map(d => {
+        const arr = durByDay[d.key] || []
+        const avg = arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : 0
+        return { name: d.date, minutes: avg }
+      }))
+      const allMins = Object.values(durByDay).flat()
+      setAvgDurationMin(allMins.length ? Math.round(allMins.reduce((a, b) => a + b, 0) / allMins.length) : null)
+
       setLoading(false)
     }
     load()
@@ -172,6 +221,70 @@ export default function AdminDashboard() {
               <Bar dataKey="rentals" fill="#16a34a" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
+        </div>
+
+        {/* New vs returning customers */}
+        <div className="card">
+          <h2 className="font-semibold text-gray-900 mb-1">לקוחות חדשים מול חוזרים — החודש</h2>
+          <p className="text-xs text-gray-400 mb-4">חוזר = לקוח שביצע צ׳ק אין גם לפני החודש הנוכחי</p>
+          {customerSplit.every(s => s.value === 0) ? (
+            <p className="text-sm text-gray-400 py-6 text-center">אין נתוני צ׳ק אין החודש</p>
+          ) : (
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <ResponsiveContainer width="100%" height={180} className="sm:max-w-[180px]">
+                <PieChart>
+                  <Pie data={customerSplit} dataKey="value" nameKey="name" innerRadius={45} outerRadius={75} paddingAngle={2}>
+                    {customerSplit.map((s, i) => <Cell key={i} fill={s.fill} />)}
+                  </Pie>
+                  <Tooltip contentStyle={{ borderRadius: '0.75rem', border: 'none', boxShadow: '0 4px 24px #0002', fontSize: 13 }} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="flex flex-col gap-3 flex-1 w-full">
+                <div className="flex items-center gap-3 p-3 bg-green-50 rounded-xl">
+                  <UserPlus size={18} className="text-green-600" />
+                  <div>
+                    <p className="text-lg font-bold text-gray-900">{customerSplit[0]?.value ?? 0}</p>
+                    <p className="text-xs text-gray-500">לקוחות חדשים</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl">
+                  <Repeat size={18} className="text-blue-600" />
+                  <div>
+                    <p className="text-lg font-bold text-gray-900">{customerSplit[1]?.value ?? 0}</p>
+                    <p className="text-xs text-gray-500">לקוחות חוזרים</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Average rental duration */}
+        <div className="card">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-semibold text-gray-900">זמן השכרה ממוצע — 7 ימים אחרונים</h2>
+            {avgDurationMin != null && (
+              <span className="text-sm font-bold text-brand-700 bg-brand-50 px-3 py-1 rounded-lg">
+                ממוצע: {avgDurationMin} דק׳
+              </span>
+            )}
+          </div>
+          {avgDurationMin == null ? (
+            <p className="text-sm text-gray-400 py-6 text-center">אין השכרות שהוחזרו בשבוע האחרון</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={180}>
+              <BarChart data={durationChart} barSize={28}>
+                <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+                <YAxis hide allowDecimals={false} />
+                <Tooltip
+                  formatter={(v) => [`${v} דק׳`, 'ממוצע']}
+                  contentStyle={{ borderRadius: '0.75rem', border: 'none', boxShadow: '0 4px 24px #0002', fontSize: 13 }}
+                  cursor={{ fill: '#eff6ff' }}
+                />
+                <Bar dataKey="minutes" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
     </Layout>
