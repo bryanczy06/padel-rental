@@ -32,8 +32,8 @@ export default function AdminDashboard() {
         const d = new Date()
         d.setDate(1)
         d.setMonth(d.getMonth() - i)
-        const key = d.toISOString().slice(0, 7) // YYYY-MM
-        months.push({ date: d.toLocaleDateString('he-IL', { month: 'short' }), key })
+        const key = d.toISOString().slice(0, 7) // YYYY-MM — used for grouping
+        months.push({ date: d.toLocaleDateString('he-IL', { month: 'short' }), key, start: d.toISOString() })
       }
       return { buckets: months, monthly: true }
     }
@@ -43,7 +43,7 @@ export default function AdminDashboard() {
       const d = new Date()
       d.setDate(d.getDate() - i)
       const key = d.toISOString().slice(0, 10)
-      days.push({ date: p === '30d' ? d.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' }) : d.toLocaleDateString('he-IL', { weekday: 'short' }), key })
+      days.push({ date: p === '30d' ? d.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' }) : d.toLocaleDateString('he-IL', { weekday: 'short' }), key, start: d.toISOString() })
     }
     return { buckets: days, monthly: false }
   }
@@ -86,7 +86,7 @@ export default function AdminDashboard() {
       const sliceLen = monthly ? 7 : 10
       const rangeRes = await supabase.from('rentals').select('started_at')
         .eq('club_id', activeClub.id)
-        .gte('started_at', buckets[0].key)
+        .gte('started_at', buckets[0].start)
       const counts = {}
       ;(rangeRes.data || []).forEach(r => {
         const k = r.started_at.slice(0, sliceLen)
@@ -95,7 +95,7 @@ export default function AdminDashboard() {
       setChart(buckets.map(d => ({ name: d.date, rentals: counts[d.key] || 0 })))
 
       // ── לקוחות חדשים מול חוזרים — לפי התקופה הנבחרת ──
-      const periodStart = buckets[0].key
+      const periodStart = buckets[0].start
       const { data: periodCheckins } = await supabase.from('checkins')
         .select('customer_id, created_at')
         .eq('club_id', activeClub.id)
@@ -123,7 +123,7 @@ export default function AdminDashboard() {
         .select('started_at, returned_at')
         .eq('club_id', activeClub.id)
         .not('returned_at', 'is', null)
-        .gte('started_at', buckets[0].key)
+        .gte('started_at', buckets[0].start)
 
       const MAX_DURATION_MIN = 3 * 60 // מחבטים שלא הוחזרו תוך 3 שעות (אבדן/גניבה) לא יעוותו את הממוצע
       const durByBucket = {}
