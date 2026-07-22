@@ -12,7 +12,7 @@ import { exportCustomers } from '../../lib/exportExcel'
 
 export default function Customers() {
   const { t }                    = useTranslation()
-  const { profile, activeClub }  = useAuth()
+  const { profile, activeClub, availableClubs }  = useAuth()
   const toast       = useToast()
   const [customers, setCustomers] = useState([])
   const [damagedIds, setDamagedIds] = useState(new Set())
@@ -27,19 +27,41 @@ export default function Customers() {
   const [saving, setSaving]       = useState(false)
 
   async function load() {
-    const clubId = activeClub?.id || profile?.club_id
-    const [{ data: custs }, { data: dmg }] = await Promise.all([
-      supabase.from('customers').select('*').order('created_at', { ascending: false }),
-      clubId
-        ? supabase.from('rentals').select('customer_id').eq('condition', 'damaged').eq('club_id', clubId)
-        : supabase.from('rentals').select('customer_id').eq('condition', 'damaged'),
-    ])
-    setCustomers(custs || [])
+    const isSuperAdmin = profile?.role === 'super_admin'
+    const clubIds = (availableClubs || []).map(c => c.id)
+
+    let custs = []
+    if (isSuperAdmin || clubIds.length === 0) {
+      const { data } = await supabase.from('customers').select('*').order('created_at', { ascending: false })
+      custs = data || []
+    } else {
+      // לקוחות שהמועדון הראשי שלהם שייך לרשת שלי
+      const [{ data: homeCusts }, { data: clubCheckins }] = await Promise.all([
+        supabase.from('customers').select('*').in('home_club_id', clubIds),
+        // + לקוחות שביקרו אצלי (צ׳ק אין) גם אם המועדון הראשי שלהם שייך לרשת אחרת
+        supabase.from('checkins').select('customer_id').in('club_id', clubIds),
+      ])
+      const homeIds  = new Set((homeCusts || []).map(c => c.id))
+      const extraIds = [...new Set((clubCheckins || []).map(c => c.customer_id))].filter(id => !homeIds.has(id))
+      let extraCusts = []
+      if (extraIds.length) {
+        const { data } = await supabase.from('customers').select('*').in('id', extraIds)
+        extraCusts = data || []
+      }
+      custs = [...(homeCusts || []), ...extraCusts]
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    }
+
+    const { data: dmg } = clubIds.length && !isSuperAdmin
+      ? await supabase.from('rentals').select('customer_id').eq('condition', 'damaged').in('club_id', clubIds)
+      : await supabase.from('rentals').select('customer_id').eq('condition', 'damaged')
+
+    setCustomers(custs)
     setDamagedIds(new Set((dmg || []).map(r => r.customer_id)))
     setLoading(false)
   }
 
-  useEffect(() => { load() }, [activeClub?.id])
+  useEffect(() => { load() }, [JSON.stringify((availableClubs || []).map(c => c.id)), profile?.role])
 
   useEffect(() => {
     supabase.from('clubs').select('id, name').then(({ data }) => {

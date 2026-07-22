@@ -9,7 +9,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pi
 
 export default function AdminDashboard() {
   const { t }                    = useTranslation()
-  const { profile, activeClub }  = useAuth()
+  const { profile, activeClub, availableClubs }  = useAuth()
   const [stats, setStats]     = useState(null)
   const [overdue, setOverdue] = useState([])
   const [chartData, setChart] = useState([])
@@ -104,6 +104,9 @@ export default function AdminDashboard() {
         : [])
 
       // ── לקוחות חדשים מול חוזרים — לפי התקופה הנבחרת ──
+      // "חוזר" נקבע לפי היסטוריית צ׳ק אין ברשת שלי (כל הסניפים שבבעלותי/שיבוצי),
+      // לא רק בסניף הנוכחי — לקוח שהמועדון הראשי שלו שייך לרשת אחרת אך צ׳ק אין כאן לראשונה נחשב "חדש"
+      const networkClubIds = (availableClubs || []).map(c => c.id)
       const periodStart = buckets[0].start
       const { data: periodCheckins } = await supabase.from('checkins')
         .select('customer_id, created_at')
@@ -112,10 +115,10 @@ export default function AdminDashboard() {
       const periodCustomerIds = [...new Set((periodCheckins || []).map(c => c.customer_id))]
 
       let returningIds = new Set()
-      if (periodCustomerIds.length) {
+      if (periodCustomerIds.length && networkClubIds.length) {
         const { data: priorCheckins } = await supabase.from('checkins')
           .select('customer_id')
-          .eq('club_id', activeClub.id)
+          .in('club_id', networkClubIds)
           .lt('created_at', periodStart)
           .in('customer_id', periodCustomerIds)
         returningIds = new Set((priorCheckins || []).map(c => c.customer_id))
@@ -153,7 +156,7 @@ export default function AdminDashboard() {
       setLoading(false)
     }
     load()
-  }, [activeClub?.id, period])
+  }, [activeClub?.id, period, JSON.stringify((availableClubs || []).map(c => c.id))])
 
   if (loading) return <Layout><Spinner /></Layout>
 
