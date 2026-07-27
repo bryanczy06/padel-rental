@@ -6,7 +6,7 @@ import { useToast } from '../../components/Toast'
 import Layout from '../../components/Layout'
 import Modal from '../../components/Modal'
 import Spinner from '../../components/Spinner'
-import { Plus, Trash2, UserCog, Phone, Shield, Crown, Pencil, Download } from 'lucide-react'
+import { Plus, Trash2, UserCog, Phone, Shield, Crown, Pencil, Download, Clock } from 'lucide-react'
 import { exportStaff } from '../../lib/exportExcel'
 
 function roleBadge(role) {
@@ -27,6 +27,7 @@ export default function Staff() {
   const [staff, setStaff]       = useState([])
   const [allClubs, setAllClubs] = useState([])
   const [staffStats, setStaffStats] = useState({}) // { [profileId]: { rentals, checkins } }
+  const [lastActive, setLastActive] = useState({}) // { [profileId]: isoString }
   const [loading, setLoading]   = useState(true)
   const [addOpen, setAddOpen]   = useState(false)
   const [addTab, setAddTab]     = useState('new') // 'new' | 'existing'
@@ -62,22 +63,45 @@ export default function Staff() {
 
     // load rental + checkin counts per staff member
     const [{ data: rentalsData }, { data: checkinsData }] = await Promise.all([
-      supabase.from('rentals').select('rented_by').eq('club_id', activeClub.id),
-      supabase.from('checkins').select('checked_in_by').eq('club_id', activeClub.id),
+      supabase.from('rentals').select('rented_by, returned_by, started_at, returned_at').eq('club_id', activeClub.id),
+      supabase.from('checkins').select('checked_in_by, created_at').eq('club_id', activeClub.id),
     ])
     const stats = {}
+    const active = {}
+    const bump = (id, ts) => {
+      if (!id) return
+      if (!active[id] || new Date(ts) > new Date(active[id])) active[id] = ts
+    }
     for (const r of (rentalsData || [])) {
-      if (!r.rented_by) continue
-      stats[r.rented_by] = stats[r.rented_by] || { rentals: 0, checkins: 0 }
-      stats[r.rented_by].rentals++
+      if (r.rented_by) {
+        stats[r.rented_by] = stats[r.rented_by] || { rentals: 0, checkins: 0 }
+        stats[r.rented_by].rentals++
+        bump(r.rented_by, r.started_at)
+      }
+      if (r.returned_by) bump(r.returned_by, r.returned_at)
     }
     for (const c of (checkinsData || [])) {
       if (!c.checked_in_by) continue
       stats[c.checked_in_by] = stats[c.checked_in_by] || { rentals: 0, checkins: 0 }
       stats[c.checked_in_by].checkins++
+      bump(c.checked_in_by, c.created_at)
     }
     setStaffStats(stats)
+    setLastActive(active)
     setLoading(false)
+  }
+
+  function formatLastActive(iso) {
+    if (!iso) return 'אין נתונים'
+    const diffMs = Date.now() - new Date(iso)
+    const mins = Math.floor(diffMs / 60000)
+    if (mins < 1)   return 'ממש עכשיו'
+    if (mins < 60)  return `לפני ${mins} דק׳`
+    const hrs = Math.floor(mins / 60)
+    if (hrs < 24)   return `לפני ${hrs} שע׳`
+    const days = Math.floor(hrs / 24)
+    if (days < 30)  return `לפני ${days} ימים`
+    return new Date(iso).toLocaleDateString('he-IL', { day: 'numeric', month: 'short', year: 'numeric' })
   }
 
   useEffect(() => {
@@ -244,6 +268,9 @@ export default function Staff() {
                   </div>
                 </div>
                 {s.phone && <p className="text-xs text-gray-500 flex items-center gap-1"><Phone size={11} /> {s.phone}</p>}
+                <p className="text-xs text-gray-400 flex items-center gap-1">
+                  <Clock size={11} /> שימוש אחרון: {formatLastActive(lastActive[s.id])}
+                </p>
                 <div className="flex gap-3 pt-1 border-t border-gray-100">
                   <div className="text-center flex-1">
                     <p className="text-lg font-bold text-gray-900">{st.rentals}</p>
