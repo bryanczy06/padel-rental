@@ -11,8 +11,9 @@ const TERMS = {
     items: [
       { label: 'נזק מכוון ₪500', text: 'פגיעה מכוונת במחבט, לרבות הטחתו ברצפה, בקיר, בקשת או בכל חלק אחר, תחויב בסך 500 ש״ח.' },
       { label: 'גניבה או אובדן ₪900', text: 'גניבה או אובדן של המחבט יחויבו בסך 900 ש״ח.' },
+      { label: 'עדכונים ממועדון הלקוחות', text: 'בהרשמתך הינך מאשר/ת קבלת עדכונים בדוא״ל ו/או בטלפון בנוגע לנקודות, הטבות ומבצעים של מועדון הלקוחות.' },
     ],
-    agree:   'קראתי ואני מסכים/ה לתנאי השימוש',
+    agree:   'קראתי ואני מסכים/ה לתנאי השימוש, לרבות קבלת עדכונים ממועדון הלקוחות',
     show:    'קרא תנאי שימוש',
     hide:    'הסתר תנאי שימוש',
   },
@@ -22,8 +23,9 @@ const TERMS = {
     items: [
       { label: '₪500 Intentional Damage', text: 'Any intentional damage to the racket, including smashing it against the floor, wall, net, or any other surface, will result in a charge of ₪500 (NIS).' },
       { label: '₪900 Theft or Loss', text: 'Theft or loss of the racket will result in a charge of ₪900 (NIS).' },
+      { label: 'Customer Club Updates', text: 'By registering, you consent to receive email and/or phone updates from us regarding points, perks, and promotions of the customer club.' },
     ],
-    agree:   'I have read and agree to the Terms of Use',
+    agree:   'I have read and agree to the Terms of Use, including receiving customer club updates',
     show:    'Read Terms of Use',
     hide:    'Hide Terms of Use',
   },
@@ -48,7 +50,7 @@ const T = {
     name:      'שם מלא *',
     namePh:    'ישראל ישראלי',
     phone:     'טלפון',
-    email:     'מייל',
+    email:     'מייל *',
     submit:    'הירשם וקבל ברקוד',
     submitting:'רושם...',
     regError:  'שגיאה בהרשמה, נסה שוב',
@@ -70,7 +72,7 @@ const T = {
     name:      'Full Name *',
     namePh:    'John Smith',
     phone:     'Phone',
-    email:     'Email',
+    email:     'Email *',
     submit:    'Register & Get QR Code',
     submitting:'Registering...',
     regError:  'Registration error, please try again',
@@ -138,11 +140,11 @@ export default function CustomerPortal() {
 
   async function handleRegister(e) {
     e.preventDefault()
-    if (!form.full_name.trim() || !agreedTerms) return
+    if (!form.full_name.trim() || !form.email.trim() || !agreedTerms) return
     setSaving(true)
     setJoinError('')
     const { data, error: err } = await supabase.from('customers')
-      .insert({ full_name: form.full_name, phone: form.phone, email: form.email })
+      .insert({ full_name: form.full_name, phone: form.phone, email: form.email, marketing_consent: true })
       .select().single()
     setSaving(false)
     if (err) { setJoinError(t.regError); return }
@@ -263,7 +265,7 @@ export default function CustomerPortal() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">{t.email}</label>
-                    <input type="email" value={form.email}
+                    <input type="email" required value={form.email}
                       onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                       className="input" placeholder="you@example.com" />
                   </div>
@@ -297,7 +299,7 @@ export default function CustomerPortal() {
                     </span>
                   </label>
                   {joinError && <p className="text-sm text-red-500 bg-red-50 px-3 py-2 rounded-lg">{joinError}</p>}
-                  <button type="submit" disabled={saving || !agreedTerms}
+                  <button type="submit" disabled={saving || !agreedTerms || !form.email.trim()}
                     className="btn-primary w-full mt-1 disabled:opacity-50 disabled:cursor-not-allowed">
                     {saving ? t.submitting : t.submit}
                   </button>
