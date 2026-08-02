@@ -60,7 +60,7 @@ export default function AdminDashboard() {
     async function load() {
       const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
       const [racketRes, rentalRes, todayRes, monthRes, totalRes] = await Promise.all([
-        supabase.from('rackets').select('status').eq('club_id', activeClub.id),
+        supabase.from('rackets').select('status').eq('club_id', activeClub.id).is('archived_at', null),
         supabase.from('rentals').select('id, started_at, rackets(name), customers(full_name, phone)')
           .eq('club_id', activeClub.id).is('returned_at', null),
         supabase.from('rentals').select('id').eq('club_id', activeClub.id)
