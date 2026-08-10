@@ -206,21 +206,21 @@ export default function Navbar() {
 
             {/* Active rentals — staff only */}
             {!isAdmin && (
-              <div className="mt-3 border-t border-gray-100 pt-3 flex flex-col gap-2">
-                <p className="text-xs font-semibold text-gray-400 px-1">מושכרים כרגע ({activeRentals.length})</p>
+              <div className="mt-3 border-t border-gray-100 dark:border-gray-800 pt-3 flex flex-col gap-2">
+                <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 px-1">מושכרים כרגע ({activeRentals.length})</p>
                 {activeRentals.length === 0
-                  ? <p className="text-xs text-gray-400 px-1">אין השכרות פעילות</p>
+                  ? <p className="text-xs text-gray-400 dark:text-gray-500 px-1">אין השכרות פעילות</p>
                   : activeRentals.map(r => (
-                    <div key={r.id} className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2">
+                    <div key={r.id} className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 rounded-xl px-3 py-2">
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{r.customers?.full_name}</p>
-                        <p className="text-xs text-gray-500 truncate">
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{r.customers?.full_name}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                           {r.rackets?.name} · {new Date(r.started_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
                       {r.customers?.phone && (
                         <a href={`tel:${r.customers.phone}`}
-                          className="p-1.5 text-brand-600 hover:bg-brand-50 rounded-lg transition-colors shrink-0">
+                          className="p-1.5 text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/30 rounded-lg transition-colors shrink-0">
                           <Phone size={16} />
                         </a>
                       )}
