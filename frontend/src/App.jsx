@@ -13,7 +13,7 @@ function BranchPicker() {
     <div className="fixed inset-0 z-50 bg-gray-50 dark:bg-gray-800/60 flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-sm flex flex-col gap-6">
         <div className="text-center">
-          <div className="h-14 w-14 rounded-2xl bg-brand-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-brand-200">
+          <div className="h-14 w-14 rounded-2xl bg-brand-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-brand-200 dark:shadow-black/40">
             <RacktiveLogo size={28} />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">באיזה סניף אתה היום?</h1>

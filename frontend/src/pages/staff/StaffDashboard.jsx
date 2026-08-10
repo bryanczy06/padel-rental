@@ -70,9 +70,9 @@ export default function StaffDashboard() {
         <div className="w-full flex flex-col gap-4">
           <Link to="/staff/rent"
             className="card flex flex-col items-center gap-3 py-10 border-2 border-brand-100
-                       hover:border-brand-400 hover:shadow-md hover:shadow-brand-100
+                       hover:border-brand-400 hover:shadow-md hover:shadow-brand-100 dark:hover:shadow-black/40
                        transition-all duration-200 cursor-pointer no-underline">
-            <div className="h-14 w-14 rounded-2xl bg-brand-600 flex items-center justify-center shadow-md shadow-brand-200">
+            <div className="h-14 w-14 rounded-2xl bg-brand-600 flex items-center justify-center shadow-md shadow-brand-200 dark:shadow-black/40">
               <CirclePlus size={28} className="text-white" />
             </div>
             <div>
@@ -85,7 +85,7 @@ export default function StaffDashboard() {
             className="card flex flex-col items-center gap-3 py-10 border-2 border-gray-100 dark:border-gray-800
                        hover:border-gray-300 dark:border-gray-600 hover:shadow-md
                        transition-all duration-200 cursor-pointer no-underline">
-            <div className="h-14 w-14 rounded-2xl bg-gray-800 flex items-center justify-center shadow-md shadow-gray-200">
+            <div className="h-14 w-14 rounded-2xl bg-gray-800 flex items-center justify-center shadow-md shadow-gray-200 dark:shadow-black/40">
               <Undo2 size={26} className="text-white" />
             </div>
             <div>
