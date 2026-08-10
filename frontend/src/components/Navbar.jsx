@@ -77,29 +77,29 @@ export default function Navbar() {
       <div className="relative">
         <button
           onClick={() => setClubPicker(p => !p)}
-          className={`flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors text-sm font-medium text-gray-700 ${mobile ? 'w-full px-3 py-2.5' : 'px-3 py-2'}`}
+          className={`flex items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm font-medium text-gray-700 dark:text-gray-200 ${mobile ? 'w-full px-3 py-2.5' : 'px-3 py-2'}`}
         >
-          <Building2 size={15} className="text-brand-600 shrink-0" />
+          <Building2 size={15} className="text-brand-600 dark:text-brand-400 shrink-0" />
           <span className="truncate flex-1 text-start">{activeClub?.name || 'בחר מועדון'}</span>
-          <ChevronDown size={14} className="text-gray-400 shrink-0" />
+          <ChevronDown size={14} className="text-gray-400 dark:text-gray-500 shrink-0" />
         </button>
         {clubPicker && (
           <>
             <div className="fixed inset-0 z-40" onClick={() => setClubPicker(false)} />
-            <div className={`absolute z-50 bg-white border border-gray-100 rounded-xl shadow-lg py-1 min-w-48 ${mobile ? 'top-full mt-1 start-0' : 'top-full mt-1 start-0'}`}>
+            <div className={`absolute z-50 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl shadow-lg py-1 min-w-48 ${mobile ? 'top-full mt-1 start-0' : 'top-full mt-1 start-0'}`}>
               {availableClubs.map(club => (
                 <button key={club.id}
                   onClick={() => { switchClub(club); setClubPicker(false) }}
-                  className={`w-full text-start px-3 py-2.5 text-sm hover:bg-gray-50 transition-colors flex items-center gap-2 ${activeClub?.id === club.id ? 'text-brand-700 font-semibold' : 'text-gray-700'}`}
+                  className={`w-full text-start px-3 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2 ${activeClub?.id === club.id ? 'text-brand-700 dark:text-brand-300 font-semibold' : 'text-gray-700 dark:text-gray-300'}`}
                 >
-                  <Building2 size={14} className={activeClub?.id === club.id ? 'text-brand-600' : 'text-gray-400'} />
+                  <Building2 size={14} className={activeClub?.id === club.id ? 'text-brand-600 dark:text-brand-400' : 'text-gray-400 dark:text-gray-500'} />
                   {club.name}
                   {!club.active && <span className="ms-auto text-xs text-red-400">מושבת</span>}
                 </button>
               ))}
               {isSuperAdmin && (
                 <>
-                  <div className="border-t border-gray-100 my-1" />
+                  <div className="border-t border-gray-100 dark:border-gray-800 my-1" />
                   <Link to="/super" onClick={() => setClubPicker(false)}
                     className="w-full text-start px-3 py-2.5 text-sm text-brand-600 font-medium hover:bg-brand-50 transition-colors flex items-center gap-2">
                     <ShieldCheck size={14} /> ניהול מועדונים
@@ -119,7 +119,7 @@ export default function Navbar() {
       <aside className="hidden lg:flex flex-col w-60 min-h-screen bg-white dark:bg-gray-900 border-e border-gray-100 dark:border-gray-800 p-4 fixed top-0 start-0 z-30">
         <div className="flex items-center gap-2 px-2 mb-6 mt-2">
           <span className="font-bold text-gray-900 dark:text-gray-100 text-lg">{t('app.name')}</span>
-          <img src="/racktive-icon.svg" alt="Racktive" className="h-8 w-auto" />
+          <img src="/racktive-icon.svg" alt="Racktive" className="h-8 w-auto dark:invert" />
           {isSuperAdmin && <ShieldCheck size={14} className="text-brand-400 ms-auto" />}
         </div>
 
@@ -162,7 +162,7 @@ export default function Navbar() {
       {/* Mobile top bar */}
       <header className="lg:hidden fixed top-0 inset-x-0 z-30 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-4 h-14 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <img src="/racktive-icon.svg" alt="Racktive" className="h-7 w-auto" />
+          <img src="/racktive-icon.svg" alt="Racktive" className="h-7 w-auto dark:invert" />
           <span className="font-bold text-gray-900 dark:text-gray-100">{t('app.name')}</span>
         </div>
         <div className="flex items-center gap-2">
