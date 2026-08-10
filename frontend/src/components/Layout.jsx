@@ -2,7 +2,7 @@ import Navbar from './Navbar'
 
 export default function Layout({ children }) {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <Navbar />
       {/* offset for sidebar on desktop, topbar on mobile */}
       <main className="lg:ps-60 pt-14 lg:pt-0 min-h-screen">

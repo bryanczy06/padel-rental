@@ -1,12 +1,13 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../lib/AuthContext'
+import { useTheme } from '../lib/ThemeContext'
 import { signOut } from '../lib/auth'
 import LanguageToggle from './LanguageToggle'
 import {
   LayoutDashboard, CircleDot, Users, UserCog,
   ClipboardList, LogOut, Menu, X, ShieldCheck,
-  Building2, ChevronDown, Phone, ArrowLeftRight
+  Building2, ChevronDown, Phone, ArrowLeftRight, Moon, Sun
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
@@ -14,6 +15,7 @@ import { supabase } from '../lib/supabase'
 export default function Navbar() {
   const { t } = useTranslation()
   const { profile, activeClub, availableClubs, switchClub } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   const location   = useLocation()
   const navigate   = useNavigate()
   const [open, setOpen]           = useState(false)
@@ -55,7 +57,19 @@ export default function Navbar() {
   }
 
   const active = (to) =>
-    location.pathname === to ? 'bg-brand-50 text-brand-700 font-semibold' : 'text-gray-600 hover:bg-gray-50'
+    location.pathname === to
+      ? 'bg-brand-50 text-brand-700 font-semibold dark:bg-brand-900/30 dark:text-brand-200'
+      : 'text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800'
+
+  function ThemeToggle({ full = false }) {
+    return (
+      <button onClick={toggleTheme}
+        className={`flex items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm font-medium text-gray-700 dark:text-gray-200 ${full ? 'w-full px-3 py-2.5' : 'p-2'}`}>
+        {theme === 'dark' ? <Sun size={16} className="text-amber-400 shrink-0" /> : <Moon size={16} className="text-gray-500 shrink-0" />}
+        {full && <span>{theme === 'dark' ? 'מצב בהיר' : 'מצב כהה'}</span>}
+      </button>
+    )
+  }
 
   function ClubSwitcher({ mobile = false }) {
     if (!canSwitch) return null
@@ -102,9 +116,9 @@ export default function Navbar() {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex flex-col w-60 min-h-screen bg-white border-e border-gray-100 p-4 fixed top-0 start-0 z-30">
+      <aside className="hidden lg:flex flex-col w-60 min-h-screen bg-white dark:bg-gray-900 border-e border-gray-100 dark:border-gray-800 p-4 fixed top-0 start-0 z-30">
         <div className="flex items-center gap-2 px-2 mb-6 mt-2">
-          <span className="font-bold text-gray-900 text-lg">{t('app.name')}</span>
+          <span className="font-bold text-gray-900 dark:text-gray-100 text-lg">{t('app.name')}</span>
           <img src="/racktive-icon.svg" alt="Racktive" className="h-8 w-auto" />
           {isSuperAdmin && <ShieldCheck size={14} className="text-brand-400 ms-auto" />}
         </div>
@@ -134,8 +148,9 @@ export default function Navbar() {
           )}
         </nav>
 
-        <div className="border-t border-gray-100 pt-4 flex flex-col gap-2">
+        <div className="border-t border-gray-100 dark:border-gray-800 pt-4 flex flex-col gap-2">
           <LanguageToggle />
+          <ThemeToggle full />
           <button onClick={handleLogout}
             className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition-colors w-full">
             <LogOut size={16} /> {t('nav.logout')}
@@ -145,15 +160,16 @@ export default function Navbar() {
       </aside>
 
       {/* Mobile top bar */}
-      <header className="lg:hidden fixed top-0 inset-x-0 z-30 bg-white border-b border-gray-100 px-4 h-14 flex items-center justify-between">
+      <header className="lg:hidden fixed top-0 inset-x-0 z-30 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-4 h-14 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <img src="/racktive-icon.svg" alt="Racktive" className="h-7 w-auto" />
-          <span className="font-bold text-gray-900">{t('app.name')}</span>
+          <span className="font-bold text-gray-900 dark:text-gray-100">{t('app.name')}</span>
         </div>
         <div className="flex items-center gap-2">
           {canSwitch && <ClubSwitcher />}
+          <ThemeToggle />
           <LanguageToggle />
-          <button onClick={() => setOpen(o => !o)} className="p-1.5 rounded-lg hover:bg-gray-100">
+          <button onClick={() => setOpen(o => !o)} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
             {open ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
@@ -163,7 +179,7 @@ export default function Navbar() {
       {open && (
         <div className="lg:hidden fixed inset-0 z-20 pt-14">
           <div className="absolute inset-0 bg-black/20" onClick={() => setOpen(false)} />
-          <nav className="relative bg-white h-full w-64 p-4 flex flex-col gap-1 shadow-xl overflow-y-auto">
+          <nav className="relative bg-white dark:bg-gray-900 h-full w-64 p-4 flex flex-col gap-1 shadow-xl overflow-y-auto">
             {!canSwitch && activeClub && (
               <p className="text-xs text-gray-400 px-3 mb-2 truncate">{activeClub.name}</p>
             )}
