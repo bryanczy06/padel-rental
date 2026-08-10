@@ -15,8 +15,8 @@ export default function LanguageToggle({ className = '' }) {
   return (
     <button
       onClick={toggle}
-      className={`text-xs font-semibold px-2.5 py-1 rounded-lg border border-gray-200
-                  hover:bg-gray-50 transition-colors ${className}`}
+      className={`text-xs font-semibold px-2.5 py-1 rounded-lg border border-gray-200 dark:border-gray-700
+                  hover:bg-gray-50 dark:bg-gray-800/60 transition-colors ${className}`}
     >
       {isHe ? 'EN' : 'עב'}
     </button>

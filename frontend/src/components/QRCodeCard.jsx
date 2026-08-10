@@ -26,9 +26,9 @@ export default function QRCodeCard({ value, label, sublabel }) {
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <canvas ref={canvas} className="rounded-xl border border-gray-100" />
-      <p className="font-semibold text-gray-900">{label}</p>
-      {sublabel && <p className="text-sm text-gray-500">{sublabel}</p>}
+      <canvas ref={canvas} className="rounded-xl border border-gray-100 dark:border-gray-800" />
+      <p className="font-semibold text-gray-900 dark:text-gray-100">{label}</p>
+      {sublabel && <p className="text-sm text-gray-500 dark:text-gray-400">{sublabel}</p>}
       <button onClick={print} className="btn-secondary w-full">
         <Printer size={16} /> {t('common.print')}
       </button>

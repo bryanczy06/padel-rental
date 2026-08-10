@@ -170,11 +170,11 @@ ${labels.map(l => `
     <Layout>
       <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">{t('rackets.title')}</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('rackets.title')}</h1>
           <div className="flex gap-2">
             <button
               onClick={() => setShowArchive(v => !v)}
-              className={`btn-secondary text-sm ${showArchive ? 'bg-gray-100' : ''}`}
+              className={`btn-secondary text-sm ${showArchive ? 'bg-gray-100 dark:bg-gray-800' : ''}`}
             >
               <Archive size={15} />
               {showArchive ? 'פעילים' : `ארכיון (${archived.length})`}
@@ -196,8 +196,8 @@ ${labels.map(l => `
 
         {/* Price setting */}
         <div className="card flex items-center gap-3 py-3">
-          <ShieldCheck size={18} className="text-brand-600 shrink-0" />
-          <span className="text-sm font-medium text-gray-700">מחיר השכרה למחבט:</span>
+          <ShieldCheck size={18} className="text-brand-600 dark:text-brand-400 shrink-0" />
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">מחיר השכרה למחבט:</span>
           {editPrice ? (
             <div className="flex items-center gap-2 ms-auto">
               <input
@@ -215,10 +215,10 @@ ${labels.map(l => `
             </div>
           ) : (
             <div className="flex items-center gap-2 ms-auto">
-              <span className="font-semibold text-gray-900">
+              <span className="font-semibold text-gray-900 dark:text-gray-100">
                 {activeClub?.price_per_rental != null ? `₪${activeClub.price_per_rental}` : 'לא הוגדר'}
               </span>
-              <button onClick={() => setEditPrice(true)} className="p-1.5 text-gray-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors">
+              <button onClick={() => setEditPrice(true)} className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:bg-brand-900/30 rounded-lg transition-colors">
                 <Pencil size={14} />
               </button>
             </div>
@@ -230,17 +230,17 @@ ${labels.map(l => `
             <div key={r.id} className={`card flex flex-col gap-3 ${r.archived_at ? 'opacity-70' : ''}`}>
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="font-semibold text-gray-900">{r.name}</p>
-                  {r.brand && <p className="text-sm text-gray-500">{r.brand}</p>}
+                  <p className="font-semibold text-gray-900 dark:text-gray-100">{r.name}</p>
+                  {r.brand && <p className="text-sm text-gray-500 dark:text-gray-400">{r.brand}</p>}
                 </div>
                 {!r.archived_at && <StatusBadge status={r.status} t={t} />}
                 {r.archived_at && <span className="badge-red text-xs">ארכיון</span>}
               </div>
 
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1 text-xs text-gray-400">
+                <div className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
                   <CircleDot size={12} />
-                  {t('rackets.usageCount')}: <span className="font-semibold text-gray-600">{r.usage_count}</span>
+                  {t('rackets.usageCount')}: <span className="font-semibold text-gray-600 dark:text-gray-400">{r.usage_count}</span>
                 </div>
                 {activeClub?.price_per_rental != null && (
                   <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
@@ -249,14 +249,14 @@ ${labels.map(l => `
                 )}
               </div>
 
-              <div className="text-xs text-gray-400 flex flex-col gap-0.5">
-                <span>תאריך קליטה: <span className="text-gray-600">{fmt(r.created_at)}</span></span>
+              <div className="text-xs text-gray-400 dark:text-gray-500 flex flex-col gap-0.5">
+                <span>תאריך קליטה: <span className="text-gray-600 dark:text-gray-400">{fmt(r.created_at)}</span></span>
                 {r.archived_at && (
-                  <span>תאריך סיום: <span className="text-gray-600">{fmt(r.archived_at)}</span></span>
+                  <span>תאריך סיום: <span className="text-gray-600 dark:text-gray-400">{fmt(r.archived_at)}</span></span>
                 )}
               </div>
 
-              {r.notes && <p className="text-xs text-gray-400 italic">{r.notes}</p>}
+              {r.notes && <p className="text-xs text-gray-400 dark:text-gray-500 italic">{r.notes}</p>}
 
               <div className="flex gap-2 flex-wrap mt-1">
                 {!r.archived_at && (
@@ -273,7 +273,7 @@ ${labels.map(l => `
                         <Check size={13} /> {t('rackets.markAvailable')}
                       </button>
                     )}
-                    <button onClick={() => archiveRacket(r.id, r.name)} className="p-1.5 text-gray-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors" title="העבר לארכיון">
+                    <button onClick={() => archiveRacket(r.id, r.name)} className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-amber-500 dark:text-amber-400 hover:bg-amber-50 dark:bg-amber-900/30 rounded-lg transition-colors" title="העבר לארכיון">
                       <Archive size={15} />
                     </button>
                   </>
@@ -283,7 +283,7 @@ ${labels.map(l => `
                     <ArchiveRestore size={13} /> שחזר
                   </button>
                 )}
-                <button onClick={() => deleteRacket(r.id, r.name)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors ms-auto" title="מחק לצמיתות">
+                <button onClick={() => deleteRacket(r.id, r.name)} className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:text-red-400 hover:bg-red-50 dark:bg-red-900/30 rounded-lg transition-colors ms-auto" title="מחק לצמיתות">
                   <Trash2 size={15} />
                 </button>
               </div>
@@ -292,7 +292,7 @@ ${labels.map(l => `
         </div>
 
         {displayed.length === 0 && (
-          <div className="text-center py-16 text-gray-400">
+          <div className="text-center py-16 text-gray-400 dark:text-gray-500">
             <CircleDot size={40} className="mx-auto mb-3 opacity-30" />
             <p>{showArchive ? 'אין מחבטים בארכיון' : t('common.noData')}</p>
           </div>
@@ -303,17 +303,17 @@ ${labels.map(l => `
       <Modal open={addOpen} onClose={() => setAddOpen(false)} title={t('rackets.add')}>
         <form onSubmit={addRacket} className="flex flex-col gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('rackets.name')} *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('rackets.name')} *</label>
             <input required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
               className="input" placeholder="מחבט #1" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('rackets.brand')}</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('rackets.brand')}</label>
             <input value={form.brand} onChange={e => setForm(f => ({ ...f, brand: e.target.value }))}
               className="input" placeholder="Babolat, Head..." />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('rackets.notes')}</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('rackets.notes')}</label>
             <textarea rows={2} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
               className="input resize-none" />
           </div>

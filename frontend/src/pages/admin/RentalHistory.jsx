@@ -43,10 +43,10 @@ export default function RentalHistory() {
   return (
     <Layout>
       <div className="flex flex-col gap-6">
-        <h1 className="text-2xl font-bold text-gray-900">{t('history.title')}</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('history.title')}</h1>
 
         <div className="relative">
-          <Search size={16} className="absolute top-3 start-3.5 text-gray-400" />
+          <Search size={16} className="absolute top-3 start-3.5 text-gray-400 dark:text-gray-500" />
           <input value={search} onChange={e => setSearch(e.target.value)}
             className="input ps-9" placeholder={`${t('history.customer')} / ${t('history.racket')}`} />
         </div>
@@ -56,23 +56,23 @@ export default function RentalHistory() {
             <div key={r.id} className="card flex items-center gap-3">
               <div className="shrink-0">
                 {!r.returned_at
-                  ? <Clock size={18} className="text-amber-500" />
+                  ? <Clock size={18} className="text-amber-500 dark:text-amber-400" />
                   : r.condition === 'damaged'
-                    ? <AlertTriangle size={18} className="text-red-500" />
-                    : <CheckCircle2 size={18} className="text-brand-600" />}
+                    ? <AlertTriangle size={18} className="text-red-500 dark:text-red-400" />
+                    : <CheckCircle2 size={18} className="text-brand-600 dark:text-brand-400" />}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <p className="font-medium text-gray-900 text-sm">{r.customers?.full_name}</p>
-                  <span className="text-gray-400 text-xs">→</span>
-                  <p className="text-sm text-gray-700">{r.rackets?.name}</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">{r.customers?.full_name}</p>
+                  <span className="text-gray-400 dark:text-gray-500 text-xs">→</span>
+                  <p className="text-sm text-gray-700 dark:text-gray-300">{r.rackets?.name}</p>
                 </div>
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                   {new Date(r.started_at).toLocaleString('he-IL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                   {r.returned_at && ` · ${duration(r)}`}
                 </p>
                 {r.profiles?.full_name && (
-                  <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
+                  <p className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1 mt-0.5">
                     <UserCog size={10} /> {r.profiles.full_name}
                   </p>
                 )}
@@ -83,14 +83,14 @@ export default function RentalHistory() {
                   : <span className={`badge ${r.condition === 'damaged' ? 'badge-red' : 'badge-green'}`}>
                       {r.condition === 'damaged' ? t('return.damaged') : t('return.good')}
                     </span>}
-                <p className="text-xs text-gray-400 mt-1">{duration(r)}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{duration(r)}</p>
               </div>
             </div>
           ))}
         </div>
 
         {filtered.length === 0 && (
-          <div className="text-center py-16 text-gray-400">
+          <div className="text-center py-16 text-gray-400 dark:text-gray-500">
             <ClipboardList size={40} className="mx-auto mb-3 opacity-30" />
             <p>{t('common.noData')}</p>
           </div>

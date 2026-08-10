@@ -135,13 +135,13 @@ export default function RentFlow() {
       {/* אזהרת מחבט שבור */}
       {damagedWarn && customer && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl flex flex-col gap-4">
-            <div className="h-14 w-14 rounded-full bg-red-100 flex items-center justify-center mx-auto">
-              <AlertTriangle size={28} className="text-red-500" />
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-sm w-full shadow-xl flex flex-col gap-4">
+            <div className="h-14 w-14 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center mx-auto">
+              <AlertTriangle size={28} className="text-red-500 dark:text-red-400" />
             </div>
             <div className="text-center">
-              <h2 className="text-lg font-bold text-gray-900">שים לב!</h2>
-              <p className="text-gray-600 mt-1">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">שים לב!</h2>
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
                 <span className="font-semibold">{customer.full_name}</span> החזיר בעבר מחבט שבור.
               </p>
             </div>
@@ -163,23 +163,23 @@ export default function RentFlow() {
           <button onClick={() => navigate('/staff')} className="btn-secondary p-2">
             <ChevronRight size={18} className="rtl-flip" />
           </button>
-          <h1 className="text-xl font-bold text-gray-900">סריקת לקוח</h1>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">סריקת לקוח</h1>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-xl text-sm">{error}</div>
+          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl text-sm">{error}</div>
         )}
 
         {/* שלב 1: סריקת לקוח */}
         {step === STEP.CUSTOMER && (
           <div className="card flex flex-col gap-4">
-            <h2 className="font-semibold text-gray-900 flex items-center gap-2">
-              <User size={18} className="text-brand-600" /> {t('rent.scanCustomer')}
+            <h2 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+              <User size={18} className="text-brand-600 dark:text-brand-400" /> {t('rent.scanCustomer')}
             </h2>
             {loading ? <Spinner /> : <QRScanner onResult={handleCustomerQR} />}
             <div className="flex items-center gap-3">
               <div className="flex-1 h-px bg-gray-200" />
-              <span className="text-xs text-gray-400">{t('common.or')}</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500">{t('common.or')}</span>
               <div className="flex-1 h-px bg-gray-200" />
             </div>
             <button onClick={() => setShowSearch(s => !s)} className="btn-secondary w-full">
@@ -195,8 +195,8 @@ export default function RentFlow() {
                 {searchRes.map(c => (
                   <button key={c.id} onClick={() => checkAndSetCustomer(c)}
                     className="card text-start hover:border-brand-200 border border-transparent transition-colors">
-                    <p className="font-medium text-gray-900">{c.full_name}</p>
-                    <p className="text-sm text-gray-500">{c.phone || c.email}</p>
+                    <p className="font-medium text-gray-900 dark:text-gray-100">{c.full_name}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{c.phone || c.email}</p>
                   </button>
                 ))}
               </div>
@@ -209,17 +209,17 @@ export default function RentFlow() {
           <div className="flex flex-col gap-4">
             {/* כרטיס לקוח + נקודות */}
             <div className="card flex flex-col items-center gap-3 py-6 text-center border-brand-200 border-2">
-              <div className="h-14 w-14 rounded-full bg-brand-50 flex items-center justify-center">
-                <User size={28} className="text-brand-600" />
+              <div className="h-14 w-14 rounded-full bg-brand-50 dark:bg-brand-900/30 flex items-center justify-center">
+                <User size={28} className="text-brand-600 dark:text-brand-400" />
               </div>
               <div>
-                <p className="text-lg font-bold text-gray-900">{customer.full_name}</p>
+                <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{customer.full_name}</p>
                 <p className="text-sm text-green-600 font-medium mt-0.5">✓ צ׳ק אין הושלם</p>
               </div>
-              <div className="flex items-center gap-2 bg-amber-50 rounded-xl px-4 py-2">
-                <Star size={16} className="text-amber-500 fill-amber-400" />
-                <span className="text-sm font-semibold text-amber-700">+5 נקודות</span>
-                <span className="text-xs text-amber-600">· סה״כ {customer.points}</span>
+              <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/30 rounded-xl px-4 py-2">
+                <Star size={16} className="text-amber-500 dark:text-amber-400 fill-amber-400" />
+                <span className="text-sm font-semibold text-amber-700 dark:text-amber-300">+5 נקודות</span>
+                <span className="text-xs text-amber-600 dark:text-amber-400">· סה״כ {customer.points}</span>
               </div>
             </div>
 
@@ -230,19 +230,19 @@ export default function RentFlow() {
                 <ScanLine size={22} className="text-white" />
               </div>
               <div>
-                <p className="font-semibold text-gray-900">סרוק מחבט להשכרה</p>
-                <p className="text-xs text-gray-500 mt-0.5">+10 נקודות נוספות</p>
+                <p className="font-semibold text-gray-900 dark:text-gray-100">סרוק מחבט להשכרה</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">+10 נקודות נוספות</p>
               </div>
             </button>
 
             <button onClick={() => navigate('/staff')}
-              className="card flex items-center gap-4 py-5 border-2 border-gray-100 hover:border-gray-300 hover:shadow-md transition-all text-start">
-              <div className="h-12 w-12 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
-                <Home size={22} className="text-gray-600" />
+              className="card flex items-center gap-4 py-5 border-2 border-gray-100 dark:border-gray-800 hover:border-gray-300 dark:border-gray-600 hover:shadow-md transition-all text-start">
+              <div className="h-12 w-12 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+                <Home size={22} className="text-gray-600 dark:text-gray-400" />
               </div>
               <div>
-                <p className="font-semibold text-gray-900">סיום — ללא השכרה</p>
-                <p className="text-xs text-gray-500 mt-0.5">הלקוח לא צריך מחבט</p>
+                <p className="font-semibold text-gray-900 dark:text-gray-100">סיום — ללא השכרה</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">הלקוח לא צריך מחבט</p>
               </div>
             </button>
           </div>
@@ -252,18 +252,18 @@ export default function RentFlow() {
         {step === STEP.RACKET && (
           <div className="flex flex-col gap-4">
             <div className="card flex items-center gap-3 border-brand-200 border">
-              <div className="h-9 w-9 rounded-xl bg-brand-50 flex items-center justify-center">
-                <User size={18} className="text-brand-600" />
+              <div className="h-9 w-9 rounded-xl bg-brand-50 dark:bg-brand-900/30 flex items-center justify-center">
+                <User size={18} className="text-brand-600 dark:text-brand-400" />
               </div>
               <div>
-                <p className="text-xs text-gray-500">{t('rent.customerFound')}</p>
-                <p className="font-semibold text-gray-900">{customer.full_name}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t('rent.customerFound')}</p>
+                <p className="font-semibold text-gray-900 dark:text-gray-100">{customer.full_name}</p>
               </div>
-              <CheckCircle2 size={20} className="text-brand-600 ms-auto" />
+              <CheckCircle2 size={20} className="text-brand-600 dark:text-brand-400 ms-auto" />
             </div>
             <div className="card flex flex-col gap-4">
-              <h2 className="font-semibold text-gray-900 flex items-center gap-2">
-                <CircleDot size={18} className="text-brand-600" /> {t('rent.scanRacket')}
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                <CircleDot size={18} className="text-brand-600 dark:text-brand-400" /> {t('rent.scanRacket')}
               </h2>
               {loading ? <Spinner /> : <QRScanner onResult={handleRacketQR} large />}
             </div>
@@ -277,22 +277,22 @@ export default function RentFlow() {
         {step === STEP.CONFIRM && (
           <div className="flex flex-col gap-4">
             <div className="card">
-              <h2 className="font-semibold text-gray-900 mb-4">{t('rent.confirm')}</h2>
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('rent.confirm')}</h2>
               <div className="flex flex-col gap-3">
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                  <User size={16} className="text-gray-500" />
+                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/60 rounded-xl">
+                  <User size={16} className="text-gray-500 dark:text-gray-400" />
                   <div>
-                    <p className="text-xs text-gray-500">{t('history.customer')}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{t('history.customer')}</p>
                     <p className="font-medium">{customer.full_name}</p>
                   </div>
                 </div>
-                <ArrowRight size={16} className="text-gray-400 mx-auto rtl-flip" />
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                  <CircleDot size={16} className="text-gray-500" />
+                <ArrowRight size={16} className="text-gray-400 dark:text-gray-500 mx-auto rtl-flip" />
+                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/60 rounded-xl">
+                  <CircleDot size={16} className="text-gray-500 dark:text-gray-400" />
                   <div>
-                    <p className="text-xs text-gray-500">{t('history.racket')}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{t('history.racket')}</p>
                     <p className="font-medium">{racket.name}</p>
-                    {racket.brand && <p className="text-xs text-gray-400">{racket.brand}</p>}
+                    {racket.brand && <p className="text-xs text-gray-400 dark:text-gray-500">{racket.brand}</p>}
                   </div>
                 </div>
               </div>
@@ -309,17 +309,17 @@ export default function RentFlow() {
         {/* שלב 5: סיום */}
         {step === STEP.DONE && (
           <div className="card flex flex-col items-center gap-4 py-10 text-center">
-            <div className="h-16 w-16 rounded-full bg-brand-50 flex items-center justify-center">
-              <CheckCircle2 size={36} className="text-brand-600" />
+            <div className="h-16 w-16 rounded-full bg-brand-50 dark:bg-brand-900/30 flex items-center justify-center">
+              <CheckCircle2 size={36} className="text-brand-600 dark:text-brand-400" />
             </div>
             <div>
-              <p className="font-bold text-gray-900 text-xl">{t('rent.success')}</p>
-              <p className="text-sm text-gray-500 mt-1">{customer.full_name} · {racket.name}</p>
+              <p className="font-bold text-gray-900 dark:text-gray-100 text-xl">{t('rent.success')}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{customer.full_name} · {racket.name}</p>
             </div>
-            <div className="flex items-center gap-2 bg-amber-50 rounded-xl px-4 py-2.5">
-              <Star size={16} className="text-amber-500 fill-amber-400" />
-              <span className="text-sm font-semibold text-amber-700">+{earnedPoints} נקודות הושלם</span>
-              <span className="text-xs text-amber-600">· סה״כ {customer.points}</span>
+            <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/30 rounded-xl px-4 py-2.5">
+              <Star size={16} className="text-amber-500 dark:text-amber-400 fill-amber-400" />
+              <span className="text-sm font-semibold text-amber-700 dark:text-amber-300">+{earnedPoints} נקודות הושלם</span>
+              <span className="text-xs text-amber-600 dark:text-amber-400">· סה״כ {customer.points}</span>
             </div>
             <button onClick={reset} className="btn-primary w-full">סרוק לקוח נוסף</button>
             <button onClick={() => navigate('/staff')} className="btn-secondary w-full">

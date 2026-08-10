@@ -10,25 +10,25 @@ function BranchPicker() {
   const { profile, activeClub, availableClubs, switchClub, loading } = useAuth()
   if (loading || !profile || activeClub || availableClubs.length <= 1) return null
   return (
-    <div className="fixed inset-0 z-50 bg-gray-50 flex flex-col items-center justify-center p-6">
+    <div className="fixed inset-0 z-50 bg-gray-50 dark:bg-gray-800/60 flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-sm flex flex-col gap-6">
         <div className="text-center">
           <div className="h-14 w-14 rounded-2xl bg-brand-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-brand-200">
             <RacktiveLogo size={28} />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">באיזה סניף אתה היום?</h1>
-          <p className="text-sm text-gray-500 mt-1">שלום {profile.full_name}, בחר סניף להמשך</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">באיזה סניף אתה היום?</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">שלום {profile.full_name}, בחר סניף להמשך</p>
         </div>
         <div className="flex flex-col gap-3">
           {availableClubs.map(club => (
             <button key={club.id} onClick={() => switchClub(club)}
               className="card text-start hover:border-brand-300 border-2 border-transparent transition-all hover:shadow-md">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-brand-50 flex items-center justify-center shrink-0">
-                  <Building2 size={20} className="text-brand-600" />
+                <div className="h-10 w-10 rounded-xl bg-brand-50 dark:bg-brand-900/30 flex items-center justify-center shrink-0">
+                  <Building2 size={20} className="text-brand-600 dark:text-brand-400" />
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900">{club.name}</p>
+                  <p className="font-semibold text-gray-900 dark:text-gray-100">{club.name}</p>
                   {!club.active && <p className="text-xs text-red-400">מושבת</p>}
                 </div>
               </div>

@@ -98,8 +98,8 @@ export default function SwapFlow() {
           <button onClick={() => navigate('/staff')} className="btn-secondary p-2">
             <ChevronRight size={18} className="rtl-flip" />
           </button>
-          <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <ArrowLeftRight size={20} className="text-brand-600" /> החלף מחבט
+          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+            <ArrowLeftRight size={20} className="text-brand-600 dark:text-brand-400" /> החלף מחבט
           </h1>
         </div>
 
@@ -110,15 +110,15 @@ export default function SwapFlow() {
           ))}
         </div>
 
-        {error && <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-xl text-sm">{error}</div>}
+        {error && <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl text-sm">{error}</div>}
 
         {/* Step 1: scan old racket */}
         {step === STEP.SCAN_OLD && (
           <div className="card flex flex-col gap-4">
-            <h2 className="font-semibold text-gray-900 flex items-center gap-2">
-              <CircleDot size={18} className="text-brand-600" /> שלב 1: סרוק את המחבט הישן
+            <h2 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+              <CircleDot size={18} className="text-brand-600 dark:text-brand-400" /> שלב 1: סרוק את המחבט הישן
             </h2>
-            <p className="text-sm text-gray-500">סרוק את המחבט שמושכר כרגע ללקוח</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">סרוק את המחבט שמושכר כרגע ללקוח</p>
             {loading ? <Spinner /> : <QRScanner onResult={handleOldRacketQR} large />}
           </div>
         )}
@@ -127,18 +127,18 @@ export default function SwapFlow() {
         {step === STEP.SCAN_NEW && (
           <div className="flex flex-col gap-4">
             <div className="card border border-brand-100">
-              <p className="text-xs text-gray-500 mb-1">מחבט ישן</p>
-              <p className="font-semibold text-gray-900">{oldRacket?.name}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">מחבט ישן</p>
+              <p className="font-semibold text-gray-900 dark:text-gray-100">{oldRacket?.name}</p>
               <div className="flex items-center gap-2 mt-2">
-                <User size={14} className="text-gray-400" />
-                <p className="text-sm text-gray-700">{oldRental?.customers?.full_name}</p>
+                <User size={14} className="text-gray-400 dark:text-gray-500" />
+                <p className="text-sm text-gray-700 dark:text-gray-300">{oldRental?.customers?.full_name}</p>
               </div>
             </div>
             <div className="card flex flex-col gap-4">
-              <h2 className="font-semibold text-gray-900 flex items-center gap-2">
-                <CircleDot size={18} className="text-brand-600" /> שלב 2: סרוק את המחבט החדש
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                <CircleDot size={18} className="text-brand-600 dark:text-brand-400" /> שלב 2: סרוק את המחבט החדש
               </h2>
-              <p className="text-sm text-gray-500">סרוק מחבט פנוי שיקבל את הלקוח</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">סרוק מחבט פנוי שיקבל את הלקוח</p>
               {loading ? <Spinner /> : <QRScanner key="new" onResult={handleNewRacketQR} large />}
             </div>
           </div>
@@ -147,21 +147,21 @@ export default function SwapFlow() {
         {/* Step 3: confirm */}
         {step === STEP.CONFIRM && (
           <div className="flex flex-col gap-4">
-            <div className="card border border-amber-100 bg-amber-50">
+            <div className="card border border-amber-100 bg-amber-50 dark:bg-amber-900/30">
               <p className="font-semibold text-amber-800 mb-3">אישור החלפה</p>
               <div className="flex items-center gap-3">
-                <div className="flex-1 bg-white rounded-xl p-3">
-                  <p className="text-xs text-gray-500">מחבט ישן</p>
-                  <p className="font-medium text-gray-900">{oldRacket?.name}</p>
+                <div className="flex-1 bg-white dark:bg-gray-900 rounded-xl p-3">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">מחבט ישן</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-100">{oldRacket?.name}</p>
                 </div>
-                <ArrowLeftRight size={18} className="text-amber-500 shrink-0" />
-                <div className="flex-1 bg-white rounded-xl p-3">
-                  <p className="text-xs text-gray-500">מחבט חדש</p>
-                  <p className="font-medium text-gray-900">{newRacket?.name}</p>
+                <ArrowLeftRight size={18} className="text-amber-500 dark:text-amber-400 shrink-0" />
+                <div className="flex-1 bg-white dark:bg-gray-900 rounded-xl p-3">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">מחבט חדש</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-100">{newRacket?.name}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 mt-3">
-                <User size={14} className="text-amber-600" />
+                <User size={14} className="text-amber-600 dark:text-amber-400" />
                 <p className="text-sm text-amber-800 font-medium">{oldRental?.customers?.full_name}</p>
               </div>
             </div>
@@ -175,12 +175,12 @@ export default function SwapFlow() {
         {/* Done */}
         {step === STEP.DONE && (
           <div className="card flex flex-col items-center gap-4 py-10 text-center">
-            <div className="h-16 w-16 rounded-full bg-brand-50 flex items-center justify-center">
-              <CheckCircle2 size={36} className="text-brand-600" />
+            <div className="h-16 w-16 rounded-full bg-brand-50 dark:bg-brand-900/30 flex items-center justify-center">
+              <CheckCircle2 size={36} className="text-brand-600 dark:text-brand-400" />
             </div>
             <div>
-              <p className="font-bold text-gray-900 text-xl">המחבט הוחלף בהצלחה!</p>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="font-bold text-gray-900 dark:text-gray-100 text-xl">המחבט הוחלף בהצלחה!</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 {oldRacket?.name} ← {newRacket?.name} · {oldRental?.customers?.full_name}
               </p>
             </div>

@@ -40,25 +40,25 @@ export default function StaffDashboard() {
     <Layout>
       <div className="flex flex-col items-center justify-center min-h-[80vh] gap-6 max-w-sm mx-auto text-center">
         <div>
-          <p className="text-gray-500 text-sm">{t('dashboard.welcome')},</p>
-          <h1 className="text-2xl font-bold text-gray-900">{profile?.full_name}</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">{t('dashboard.welcome')},</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{profile?.full_name}</h1>
         </div>
 
         {overdue.length > 0 && (
-          <div className="w-full bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-col gap-3">
-            <div className="flex items-center gap-2 text-amber-700 font-semibold text-sm">
+          <div className="w-full bg-amber-50 dark:bg-amber-900/30 border border-amber-200 rounded-2xl p-4 flex flex-col gap-3">
+            <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 font-semibold text-sm">
               <AlertTriangle size={16} /> {overdue.length} השכרות מעל שעתיים
             </div>
             {overdue.map(r => (
-              <div key={r.id} className="bg-white rounded-xl p-3 flex items-center gap-3 shadow-sm">
-                <Clock size={16} className="text-amber-500 shrink-0" />
+              <div key={r.id} className="bg-white dark:bg-gray-900 rounded-xl p-3 flex items-center gap-3 shadow-sm">
+                <Clock size={16} className="text-amber-500 dark:text-amber-400 shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900 text-sm truncate">{r.customers?.full_name}</p>
-                  <p className="text-xs text-gray-500">{r.rackets?.name} · {elapsed(r.started_at)}</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-100 text-sm truncate">{r.customers?.full_name}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{r.rackets?.name} · {elapsed(r.started_at)}</p>
                 </div>
                 {r.customers?.phone && (
                   <a href={`tel:${r.customers.phone}`}
-                    className="p-1.5 text-brand-600 hover:bg-brand-50 rounded-lg transition-colors shrink-0">
+                    className="p-1.5 text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:bg-brand-900/30 rounded-lg transition-colors shrink-0">
                     <Phone size={15} />
                   </a>
                 )}
@@ -76,21 +76,21 @@ export default function StaffDashboard() {
               <CirclePlus size={28} className="text-white" />
             </div>
             <div>
-              <p className="font-semibold text-gray-900 text-lg">{t('dashboard.quickRent')}</p>
-              <p className="text-sm text-gray-500 mt-0.5">{t('rent.scanCustomer')}</p>
+              <p className="font-semibold text-gray-900 dark:text-gray-100 text-lg">{t('dashboard.quickRent')}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{t('rent.scanCustomer')}</p>
             </div>
           </Link>
 
           <Link to="/staff/return"
-            className="card flex flex-col items-center gap-3 py-10 border-2 border-gray-100
-                       hover:border-gray-300 hover:shadow-md
+            className="card flex flex-col items-center gap-3 py-10 border-2 border-gray-100 dark:border-gray-800
+                       hover:border-gray-300 dark:border-gray-600 hover:shadow-md
                        transition-all duration-200 cursor-pointer no-underline">
             <div className="h-14 w-14 rounded-2xl bg-gray-800 flex items-center justify-center shadow-md shadow-gray-200">
               <Undo2 size={26} className="text-white" />
             </div>
             <div>
-              <p className="font-semibold text-gray-900 text-lg">{t('dashboard.quickReturn')}</p>
-              <p className="text-sm text-gray-500 mt-0.5">{t('return.scanRacket')}</p>
+              <p className="font-semibold text-gray-900 dark:text-gray-100 text-lg">{t('dashboard.quickReturn')}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{t('return.scanRacket')}</p>
             </div>
           </Link>
         </div>

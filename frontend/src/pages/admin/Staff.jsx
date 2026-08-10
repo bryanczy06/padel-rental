@@ -10,10 +10,10 @@ import { Plus, Trash2, UserCog, Phone, Shield, Crown, Pencil, Download, Clock } 
 import { exportStaff } from '../../lib/exportExcel'
 
 function roleBadge(role) {
-  if (role === 'owner')      return { label: 'בעלים',  icon: Crown,  color: 'bg-amber-100 text-amber-700',  iconColor: 'text-amber-500' }
-  if (role === 'admin')      return { label: 'מנהל',   icon: Shield, color: 'bg-brand-100 text-brand-700',  iconColor: 'text-brand-600' }
-  if (role === 'super_admin') return { label: 'סופר אדמין', icon: Shield, color: 'bg-purple-100 text-purple-700', iconColor: 'text-purple-600' }
-  return                            { label: 'עובד',   icon: null,   color: 'bg-gray-100 text-gray-600',    iconColor: '' }
+  if (role === 'owner')      return { label: 'בעלים',  icon: Crown,  color: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300',  iconColor: 'text-amber-500 dark:text-amber-400' }
+  if (role === 'admin')      return { label: 'מנהל',   icon: Shield, color: 'bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300',  iconColor: 'text-brand-600 dark:text-brand-400' }
+  if (role === 'super_admin') return { label: 'סופר אדמין', icon: Shield, color: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300', iconColor: 'text-purple-600 dark:text-purple-400' }
+  return                            { label: 'עובד',   icon: null,   color: 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400',    iconColor: '' }
 }
 
 export default function Staff() {
@@ -223,7 +223,7 @@ export default function Staff() {
     <Layout>
       <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">{t('staff.title')}</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('staff.title')}</h1>
           <div className="flex gap-2">
             <button onClick={() => exportStaff(staff)} className="btn-secondary">
               <Download size={15} /> אקסל
@@ -247,39 +247,39 @@ export default function Staff() {
                       {s.full_name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
                     </div>
                     <div className="min-w-0">
-                      <p className="font-semibold text-gray-900 truncate">{s.full_name}</p>
+                      <p className="font-semibold text-gray-900 dark:text-gray-100 truncate">{s.full_name}</p>
                       <div className="flex items-center gap-1">
                         {RIcon && <RIcon size={11} className={rb.iconColor} />}
-                        <p className="text-xs text-gray-500">{rb.label}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{rb.label}</p>
                       </div>
                     </div>
                   </div>
                   <div className="flex gap-1 shrink-0">
                     <button onClick={() => openEdit(s)}
-                      className="p-1.5 text-gray-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors">
+                      className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:bg-brand-900/30 rounded-lg transition-colors">
                       <Pencil size={14} />
                     </button>
                     {s.id !== profile.id && (
                       <button onClick={() => removeStaff(s.id)}
-                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                        className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:text-red-400 hover:bg-red-50 dark:bg-red-900/30 rounded-lg transition-colors">
                         <Trash2 size={14} />
                       </button>
                     )}
                   </div>
                 </div>
-                {s.phone && <p className="text-xs text-gray-500 flex items-center gap-1"><Phone size={11} /> {s.phone}</p>}
-                <p className="text-xs text-gray-400 flex items-center gap-1">
+                {s.phone && <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1"><Phone size={11} /> {s.phone}</p>}
+                <p className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1">
                   <Clock size={11} /> שימוש אחרון: {formatLastActive(lastActive[s.id])}
                 </p>
-                <div className="flex gap-3 pt-1 border-t border-gray-100">
+                <div className="flex gap-3 pt-1 border-t border-gray-100 dark:border-gray-800">
                   <div className="text-center flex-1">
-                    <p className="text-lg font-bold text-gray-900">{st.rentals}</p>
-                    <p className="text-xs text-gray-400">השכרות</p>
+                    <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{st.rentals}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500">השכרות</p>
                   </div>
-                  <div className="w-px bg-gray-100" />
+                  <div className="w-px bg-gray-100 dark:bg-gray-800" />
                   <div className="text-center flex-1">
-                    <p className="text-lg font-bold text-gray-900">{st.checkins}</p>
-                    <p className="text-xs text-gray-400">צ׳ק אין</p>
+                    <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{st.checkins}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500">צ׳ק אין</p>
                   </div>
                 </div>
               </div>
@@ -288,7 +288,7 @@ export default function Staff() {
         </div>
 
         {staff.length === 0 && (
-          <div className="text-center py-16 text-gray-400">
+          <div className="text-center py-16 text-gray-400 dark:text-gray-500">
             <UserCog size={40} className="mx-auto mb-3 opacity-30" />
             <p>{t('common.noData')}</p>
           </div>
@@ -298,13 +298,13 @@ export default function Staff() {
       {/* Add staff modal */}
       <Modal open={addOpen} onClose={() => { setAddOpen(false); setAddTab('new') }} title={t('staff.add')}>
         {/* Tabs */}
-        <div className="flex rounded-xl bg-gray-100 p-1 mb-4 gap-1">
+        <div className="flex rounded-xl bg-gray-100 dark:bg-gray-800 p-1 mb-4 gap-1">
           <button type="button" onClick={() => setAddTab('new')}
-            className={`flex-1 text-sm py-1.5 rounded-lg font-medium transition-colors ${addTab === 'new' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>
+            className={`flex-1 text-sm py-1.5 rounded-lg font-medium transition-colors ${addTab === 'new' ? 'bg-white dark:bg-gray-900 shadow text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300'}`}>
             צור חדש
           </button>
           <button type="button" onClick={() => setAddTab('existing')}
-            className={`flex-1 text-sm py-1.5 rounded-lg font-medium transition-colors ${addTab === 'existing' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>
+            className={`flex-1 text-sm py-1.5 rounded-lg font-medium transition-colors ${addTab === 'existing' ? 'bg-white dark:bg-gray-900 shadow text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300'}`}>
             שבץ קיים
           </button>
         </div>
@@ -312,23 +312,23 @@ export default function Staff() {
         {addTab === 'new' ? (
           <form onSubmit={addStaff} className="flex flex-col gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('staff.fullName')} *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('staff.fullName')} *</label>
               <input required value={form.full_name} onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))} className="input" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('staff.email')} *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('staff.email')} *</label>
               <input required type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className="input" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('staff.phone')}</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('staff.phone')}</label>
               <input type="tel" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} className="input" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('staff.password')} *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('staff.password')} *</label>
               <input required type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} className="input" minLength={6} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('staff.role')}</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('staff.role')}</label>
               <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))} className="input">
                 <option value="staff">{t('staff.staffRole')}</option>
                 <option value="admin">{t('staff.admin')}</option>
@@ -343,9 +343,9 @@ export default function Staff() {
           </form>
         ) : (
           <form onSubmit={assignExisting} className="flex flex-col gap-4">
-            <p className="text-sm text-gray-500">הזן את המייל של עובד קיים במערכת כדי לשבץ אותו למועדון הנוכחי.</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">הזן את המייל של עובד קיים במערכת כדי לשבץ אותו למועדון הנוכחי.</p>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">כתובת מייל *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">כתובת מייל *</label>
               <input required type="email" value={assignEmail}
                 onChange={e => setAssignEmail(e.target.value)}
                 className="input" placeholder="email@example.com" />
@@ -364,25 +364,25 @@ export default function Staff() {
       <Modal open={editOpen} onClose={() => setEditOpen(false)} title={`עריכה — ${editTarget?.full_name}`}>
         <form onSubmit={saveEdit} className="flex flex-col gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('staff.fullName')} *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('staff.fullName')} *</label>
             <input required value={editForm.full_name}
               onChange={e => setEditForm(f => ({ ...f, full_name: e.target.value }))}
               className="input" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('staff.phone')}</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('staff.phone')}</label>
             <input type="tel" value={editForm.phone}
               onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))}
               className="input" placeholder="050-0000000" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('staff.email')}</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('staff.email')}</label>
             <input type="email" value={editForm.email}
               onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))}
               className="input" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('staff.role')}</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('staff.role')}</label>
             <select value={editForm.role} onChange={e => setEditForm(f => ({ ...f, role: e.target.value }))} className="input">
               <option value="staff">עובד</option>
               <option value="admin">מנהל</option>
@@ -391,7 +391,7 @@ export default function Staff() {
           </div>
           {canManageClubs && allClubs.length > 1 && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">מועדון</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">מועדון</label>
               <select value={editForm.club_id} onChange={e => setEditForm(f => ({ ...f, club_id: e.target.value }))} className="input">
                 {allClubs.map(c => (
                   <option key={c.id} value={c.id}>{c.name}</option>

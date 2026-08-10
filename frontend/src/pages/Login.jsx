@@ -33,7 +33,7 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-dvh flex flex-col items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-dvh flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800/60 px-4">
       <div className="absolute top-4 end-4">
         <LanguageToggle />
       </div>
@@ -41,18 +41,18 @@ export default function Login() {
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-8">
           <img src="/racktive-icon.svg" alt="Racktive" className="h-16 w-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900">{t('app.name')}</h1>
-          <p className="text-sm text-gray-500 mt-1">{t('auth.login')}</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('app.name')}</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('auth.login')}</p>
         </div>
 
         <div className="card">
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 {t('auth.email')}
               </label>
               <div className="relative">
-                <Mail size={16} className="absolute top-3 start-3.5 text-gray-400" />
+                <Mail size={16} className="absolute top-3 start-3.5 text-gray-400 dark:text-gray-500" />
                 <input
                   type="email" required autoComplete="email"
                   value={email} onChange={e => setEmail(e.target.value)}
@@ -63,11 +63,11 @@ export default function Login() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 {t('auth.password')}
               </label>
               <div className="relative">
-                <Lock size={16} className="absolute top-3 start-3.5 text-gray-400" />
+                <Lock size={16} className="absolute top-3 start-3.5 text-gray-400 dark:text-gray-500" />
                 <input
                   type="password" required autoComplete="current-password"
                   value={password} onChange={e => setPassword(e.target.value)}
@@ -78,7 +78,7 @@ export default function Login() {
             </div>
 
             {error && (
-              <p className="text-sm text-red-500 bg-red-50 px-3 py-2 rounded-lg">{error}</p>
+              <p className="text-sm text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/30 px-3 py-2 rounded-lg">{error}</p>
             )}
 
             <button type="submit" disabled={loading || authLoading} className="btn-primary w-full mt-1">

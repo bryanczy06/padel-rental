@@ -5,6 +5,6 @@ export default function Spinner({ fullscreen }) {
     </div>
   )
   if (fullscreen)
-    return <div className="fixed inset-0 flex items-center justify-center bg-white">{el}</div>
+    return <div className="fixed inset-0 flex items-center justify-center bg-white dark:bg-gray-900">{el}</div>
   return el
 }
