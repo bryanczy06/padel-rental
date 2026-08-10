@@ -25,7 +25,7 @@ export default function SwapFlow() {
   async function handleOldRacketQR(code) {
     setLoading(true)
     setError('')
-    const { data: r } = await supabase.from('rackets').select('*').eq('qr_code', code).single()
+    const { data: r } = await supabase.from('rackets').select('*').eq("qr_code", code).maybeSingle()
     if (!r) { setError('מחבט לא נמצא'); setLoading(false); return }
 
     const { data: rental } = await supabase
@@ -33,7 +33,7 @@ export default function SwapFlow() {
       .select('*, customers(id, full_name, phone)')
       .eq('racket_id', r.id)
       .is('returned_at', null)
-      .single()
+      .maybeSingle()
 
     setLoading(false)
     if (!rental) { setError('מחבט זה אינו מושכר כרגע'); return }
@@ -47,7 +47,7 @@ export default function SwapFlow() {
     setError('')
     if (code === oldRacket.qr_code) { setError('סרקת את אותו מחבט'); setLoading(false); return }
 
-    const { data: r } = await supabase.from('rackets').select('*').eq('qr_code', code).single()
+    const { data: r } = await supabase.from('rackets').select('*').eq("qr_code", code).maybeSingle()
     if (!r) { setError('מחבט לא נמצא'); setLoading(false); return }
     if (r.status !== 'available') { setError('המחבט החדש אינו פנוי'); setLoading(false); return }
 

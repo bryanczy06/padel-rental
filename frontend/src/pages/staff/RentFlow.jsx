@@ -35,9 +35,12 @@ export default function RentFlow() {
   async function checkAndSetCustomer(data) {
     const clubId = activeClub?.id || profile?.club_id
 
-    // בדוק השכרה פתוחה
-    const { data: active } = await supabase.from('rentals').select('id')
-      .eq('customer_id', data.id).is('returned_at', null).limit(1)
+    // בדוק השכרה פתוחה + מחבט שבור בעבר במקביל (שתי קריאות עצמאיות)
+    const dmgQuery = supabase.from('rentals').select('id').eq('customer_id', data.id).eq('condition', 'damaged')
+    const [{ data: active }, { data: dmg }] = await Promise.all([
+      supabase.from('rentals').select('id').eq('customer_id', data.id).is('returned_at', null).limit(1),
+      (clubId ? dmgQuery.eq('club_id', clubId) : dmgQuery).limit(1),
+    ])
     if (active?.length) {
       setError('ללקוח זה יש כבר מחבט מושכר / This customer already has an active rental')
       return
@@ -55,16 +58,13 @@ export default function RentFlow() {
     setCustomer(updatedCustomer)
     setEarnedPoints(5)
 
-    // בדוק מחבט שבור בעבר
-    const q = supabase.from('rentals').select('id').eq('customer_id', data.id).eq('condition', 'damaged')
-    const { data: dmg } = clubId ? await q.eq('club_id', clubId).limit(1) : await q.limit(1)
     if (dmg?.length) { setDamagedWarn(true) } else { setStep(STEP.CHECKIN) }
     setError('')
   }
 
   async function handleCustomerQR(code) {
     setLoading(true)
-    const { data } = await supabase.from('customers').select('*').eq('qr_code', code).single()
+    const { data } = await supabase.from('customers').select('*').eq('qr_code', code).maybeSingle()
     setLoading(false)
     if (!data) { setError('לא נמצא לקוח / Customer not found'); return }
     await checkAndSetCustomer(data)
@@ -84,7 +84,7 @@ export default function RentFlow() {
 
   async function handleRacketQR(code) {
     setLoading(true)
-    const { data } = await supabase.from('rackets').select('*').eq('qr_code', code).single()
+    const { data } = await supabase.from('rackets').select('*').eq('qr_code', code).maybeSingle()
     setLoading(false)
     if (!data) { setError('לא נמצא מחבט / Racket not found'); return }
     if (data.status !== 'available') {

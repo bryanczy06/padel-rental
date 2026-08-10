@@ -15,7 +15,8 @@ export default function QRScanner({ onResult, onClose, large = false }) {
     setLoading(true)
     setStarted(true)  // show div first so html5-qrcode can find it
     setError(null)
-    setTimeout(() => {
+    // ממתין לפריים הבא (במקום השהיה קבועה) כדי לוודא שה-div כבר נצבע ב-DOM — הרבה יותר מהיר מ-setTimeout קבוע
+    requestAnimationFrame(() => requestAnimationFrame(() => {
       try {
         scanner.current = new Html5Qrcode(id.current)
         Html5Qrcode.getCameras()
@@ -24,7 +25,7 @@ export default function QRScanner({ onResult, onClose, large = false }) {
             const cam = cameras.find(c => /back|rear|environment/i.test(c.label)) || cameras[cameras.length - 1]
             return scanner.current.start(
               { facingMode: 'environment' },
-              { fps: 10, qrbox: { width: large ? 350 : 250, height: large ? 350 : 250 }, aspectRatio: 1 },
+              { fps: 15, qrbox: { width: large ? 350 : 250, height: large ? 350 : 250 }, aspectRatio: 1 },
               (text) => { onResult(text) },
               () => {}
             )
@@ -48,7 +49,7 @@ export default function QRScanner({ onResult, onClose, large = false }) {
       } catch(e) {
         setError(e.message || 'שגיאה'); setLoading(false); setStarted(false)
       }
-    }, 100)
+    }))
   }
 
   useEffect(() => {

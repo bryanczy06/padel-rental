@@ -28,7 +28,7 @@ export default function ReturnFlow() {
   async function handleRacketQR(code) {
     setLoading(true)
     setError('')
-    const { data: r } = await supabase.from('rackets').select('*').eq('qr_code', code).single()
+    const { data: r } = await supabase.from('rackets').select('*').eq("qr_code", code).maybeSingle()
     if (!r) { setError('לא נמצא מחבט / Racket not found'); setLoading(false); return }
 
     const { data: openRental } = await supabase
@@ -36,7 +36,7 @@ export default function ReturnFlow() {
       .select('*, customers(full_name, phone)')
       .eq('racket_id', r.id)
       .is('returned_at', null)
-      .single()
+      .maybeSingle()
 
     setLoading(false)
     if (!openRental) { setError(t('return.noOpenRental')); return }
