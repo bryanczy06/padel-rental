@@ -110,7 +110,7 @@ export default function CustomerPortal() {
     async function init() {
       const savedId = localStorage.getItem(STORAGE_KEY)
       if (savedId) {
-        const { data } = await supabase.from('customers').select('*').eq('id', savedId).single()
+        const { data } = await supabase.rpc('find_customer_by_id', { p_id: savedId }).maybeSingle()
         if (data) {
           setJoinCustomer(data)
           const url = await QRCode.toDataURL(data.qr_code, { width: 280, margin: 2 })
@@ -130,8 +130,7 @@ export default function CustomerPortal() {
     setSearching(true)
     setNotFound(false)
     setQrResult(null)
-    const { data } = await supabase.from('customers').select('*')
-      .eq('phone', phone.trim()).maybeSingle()
+    const { data } = await supabase.rpc('find_customer_by_phone', { p_phone: phone.trim() }).maybeSingle()
     setSearching(false)
     if (!data) { setNotFound(true); return }
     const url = await QRCode.toDataURL(data.qr_code, { width: 280, margin: 2 })
@@ -143,9 +142,9 @@ export default function CustomerPortal() {
     if (!form.full_name.trim() || !form.email.trim() || !agreedTerms) return
     setSaving(true)
     setJoinError('')
-    const { data, error: err } = await supabase.from('customers')
-      .insert({ full_name: form.full_name, phone: form.phone, email: form.email, marketing_consent: true })
-      .select().single()
+    const { data, error: err } = await supabase.rpc('register_customer', {
+      p_full_name: form.full_name, p_phone: form.phone, p_email: form.email, p_marketing_consent: true,
+    }).single()
     setSaving(false)
     if (err) { setJoinError(t.regError); return }
     localStorage.setItem(STORAGE_KEY, data.id)
