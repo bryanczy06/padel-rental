@@ -34,12 +34,17 @@ export default function SuperDashboard() {
     if (!clubsData) { setLoading(false); return }
 
     const enriched = await Promise.all(clubsData.map(async (club) => {
-      const [{ count: staffCount }, { count: racketCount }, { count: activeRentals }, { data: ownerRows }] = await Promise.all([
-        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('club_id', club.id),
-        supabase.from('rackets').select('*', { count: 'exact', head: true }).eq('club_id', club.id),
+      const [{ data: primaryStaff }, { data: scStaff }, { count: racketCount }, { count: activeRentals }, { data: ownerRows }] = await Promise.all([
+        supabase.from('profiles').select('id').eq('club_id', club.id),
+        supabase.from('staff_clubs').select('profile_id').eq('club_id', club.id),
+        supabase.from('rackets').select('*', { count: 'exact', head: true }).eq('club_id', club.id).is('archived_at', null),
         supabase.from('rentals').select('*', { count: 'exact', head: true }).eq('club_id', club.id).is('returned_at', null),
         supabase.from('club_owners').select('profiles(id, full_name, email)').eq('club_id', club.id),
       ])
+      // union: primary club_id staff + staff_clubs staff, deduplicated
+      const primaryIds = new Set((primaryStaff || []).map(p => p.id))
+      const scIds = (scStaff || []).map(r => r.profile_id).filter(id => !primaryIds.has(id))
+      const staffCount = primaryIds.size + scIds.length
       const owners = (ownerRows || []).map(r => r.profiles).filter(Boolean)
       return { ...club, staffCount, racketCount, activeRentals, owners }
     }))
