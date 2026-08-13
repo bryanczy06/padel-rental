@@ -30,6 +30,18 @@ function fmt(d) {
   return new Date(d).toLocaleDateString('he-IL')
 }
 
+// ממיין לפי המספר שבשם המחבט (למשל "מחבט 2" לפני "מחבט 10"), ולא לפי סדר ההכנסה למערכת
+function byRacketNumber(a, b) {
+  const numA = a.name?.match(/\d+/)
+  const numB = b.name?.match(/\d+/)
+  if (numA && numB) {
+    const diff = parseInt(numA[0], 10) - parseInt(numB[0], 10)
+    if (diff !== 0) return diff
+  } else if (numA) return -1
+  else if (numB) return 1
+  return (a.name || '').localeCompare(b.name || '', 'he', { numeric: true })
+}
+
 export default function Rackets() {
   const { t }                   = useTranslation()
   const { profile, activeClub } = useAuth()
@@ -48,7 +60,7 @@ export default function Rackets() {
   async function load() {
     const { data } = await supabase.from('rackets').select('*')
       .eq('club_id', activeClub.id).order('created_at')
-    setRackets(data || [])
+    setRackets((data || []).slice().sort(byRacketNumber))
     setLoading(false)
   }
 
