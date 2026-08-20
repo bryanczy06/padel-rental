@@ -25,6 +25,29 @@ export function exportRackets(rackets, pricePerRental, clubName) {
   download(wb, `מחבטים_${clubName || 'מועדון'}_${today()}.xlsx`)
 }
 
+// לייבוא Batch למדפסת Niimbot B1: כל שורה = מדבקה אחת עם 2 ברקודים (מדבקה 20×40 מ״מ, נחתכת לשניים אחרי ההדפסה)
+export function exportRacketQRPairs(rackets, clubName) {
+  const active = rackets.filter(r => !r.archived_at)
+  const rows = []
+  for (let i = 0; i < active.length; i += 2) {
+    const a = active[i]
+    const b = active[i + 1]
+    rows.push({
+      'ברקוד 1': a.qr_code,
+      'שם 1':    a.name,
+      'ברקוד 2': b ? b.qr_code : '',
+      'שם 2':    b ? b.name : '',
+    })
+  }
+
+  const ws = XLSX.utils.json_to_sheet(rows)
+  ws['!cols'] = [24, 20, 24, 20].map(w => ({ wch: w }))
+
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, ws, 'ברקודים')
+  download(wb, `ברקודים_מדבקות_${clubName || 'מועדון'}_${today()}.xlsx`)
+}
+
 export function exportCustomers(customers) {
   const rows = customers.map(c => ({
     'שם מלא':    c.full_name,

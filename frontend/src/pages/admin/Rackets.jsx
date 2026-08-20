@@ -8,7 +8,7 @@ import Modal from '../../components/Modal'
 import QRCodeCard from '../../components/QRCodeCard'
 import Spinner from '../../components/Spinner'
 import { Plus, QrCode, Wrench, Check, CircleDot, Trash2, Archive, ArchiveRestore, ShieldCheck, Pencil, Download, Printer } from 'lucide-react'
-import { exportRackets } from '../../lib/exportExcel'
+import { exportRackets, exportRacketQRPairs } from '../../lib/exportExcel'
 import QRCode from 'qrcode'
 
 function StatusBadge({ status, t }) {
@@ -192,7 +192,11 @@ ${labels.map(l => `
               {showArchive ? 'פעילים' : `ארכיון (${archived.length})`}
             </button>
             <button onClick={printAllQR} className="btn-secondary text-sm">
-              <Printer size={15} /> הדפס ברקודים
+              <Printer size={15} /> הדפס ברקודים (PDF)
+            </button>
+            <button onClick={() => exportRacketQRPairs(rackets, activeClub?.name)}
+              className="btn-secondary text-sm">
+              <Download size={15} /> אקסל למדפסת Niimbot
             </button>
             <button onClick={() => exportRackets(rackets, activeClub?.price_per_rental, activeClub?.name)}
               className="btn-secondary text-sm">
