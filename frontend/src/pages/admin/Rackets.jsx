@@ -7,7 +7,7 @@ import Layout from '../../components/Layout'
 import Modal from '../../components/Modal'
 import QRCodeCard from '../../components/QRCodeCard'
 import Spinner from '../../components/Spinner'
-import { Plus, QrCode, Wrench, Check, CircleDot, Trash2, Archive, ArchiveRestore, ShieldCheck, Pencil, Download, Printer } from 'lucide-react'
+import { Plus, QrCode, Wrench, Check, CircleDot, Trash2, Archive, ArchiveRestore, ShieldCheck, Pencil, Download, Printer, Banknote, X } from 'lucide-react'
 import { exportRackets, exportRacketQRPairs } from '../../lib/exportExcel'
 import QRCode from 'qrcode'
 
@@ -50,12 +50,15 @@ export default function Rackets() {
   const [loading, setLoading]   = useState(true)
   const [addOpen, setAddOpen]   = useState(false)
   const [qrTarget, setQRTarget] = useState(null)
-  const [form, setForm]         = useState({ name: '', brand: '', notes: '' })
+  const [form, setForm]         = useState({ name: '', brand: '', notes: '', price_override: '' })
   const [saving, setSaving]     = useState(false)
   const [showArchive, setShowArchive] = useState(false)
   const [price, setPrice]       = useState(activeClub?.price_per_rental ?? '')
   const [editPrice, setEditPrice] = useState(false)
   const [savingPrice, setSavingPrice] = useState(false)
+  const [editPriceId, setEditPriceId] = useState(null)
+  const [racketPriceDraft, setRacketPriceDraft] = useState('')
+  const [savingRacketPrice, setSavingRacketPrice] = useState(false)
 
   async function load() {
     const { data } = await supabase.from('rackets').select('*')
@@ -73,14 +76,26 @@ export default function Rackets() {
   async function addRacket(e) {
     e.preventDefault()
     setSaving(true)
+    const { name, brand, notes, price_override } = form
     const { error } = await supabase.from('rackets').insert({
-      ...form, club_id: activeClub.id
+      name, brand, notes, club_id: activeClub.id,
+      price_override: price_override !== '' ? parseFloat(price_override) : null,
     })
     setSaving(false)
     if (error) { toast(t('common.error'), 'error'); return }
     toast(t('rackets.addSuccess'))
-    setForm({ name: '', brand: '', notes: '' })
+    setForm({ name: '', brand: '', notes: '', price_override: '' })
     setAddOpen(false)
+    load()
+  }
+
+  async function saveRacketPrice(id) {
+    setSavingRacketPrice(true)
+    const val = racketPriceDraft === '' ? null : parseFloat(racketPriceDraft)
+    const { error } = await supabase.from('rackets').update({ price_override: val }).eq('id', id)
+    setSavingRacketPrice(false)
+    if (error) { toast('שגיאה: ' + error.message, 'error'); return }
+    setEditPriceId(null)
     load()
   }
 
@@ -258,12 +273,48 @@ ${labels.map(l => `
                   <CircleDot size={12} />
                   {t('rackets.usageCount')}: <span className="font-semibold text-gray-600 dark:text-gray-400">{r.usage_count}</span>
                 </div>
-                {activeClub?.price_per_rental != null && (
-                  <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
-                    ₪{(r.usage_count * activeClub.price_per_rental).toLocaleString()} הכנסות
-                  </span>
-                )}
+                {(() => {
+                  const effectivePrice = r.price_override ?? activeClub?.price_per_rental
+                  if (effectivePrice == null) return null
+                  return (
+                    <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                      ₪{(r.usage_count * effectivePrice).toLocaleString()} הכנסות
+                    </span>
+                  )
+                })()}
               </div>
+
+              {/* Per-racket price override */}
+              {!r.archived_at && (
+                editPriceId === r.id ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number" min="0" step="0.5" value={racketPriceDraft}
+                      onChange={e => setRacketPriceDraft(e.target.value)}
+                      className="input py-1 text-sm flex-1"
+                      placeholder={`ברירת מחדל (₪${activeClub?.price_per_rental ?? 0})`}
+                      autoFocus
+                    />
+                    <button onClick={() => saveRacketPrice(r.id)} disabled={savingRacketPrice} className="btn-primary text-xs py-1.5 px-3">
+                      {savingRacketPrice ? '...' : 'שמור'}
+                    </button>
+                    <button onClick={() => setEditPriceId(null)} className="btn-secondary text-xs py-1.5 px-3">
+                      <X size={13} />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => { setEditPriceId(r.id); setRacketPriceDraft(r.price_override != null ? String(r.price_override) : '') }}
+                    className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 hover:text-brand-600 dark:hover:text-brand-400 self-start"
+                  >
+                    <Banknote size={12} />
+                    {r.price_override != null
+                      ? <span className="font-medium">מחיר ייחודי: ₪{r.price_override}</span>
+                      : <span>מחיר ברירת מחדל (₪{activeClub?.price_per_rental ?? '—'})</span>}
+                    <Pencil size={11} />
+                  </button>
+                )
+              )}
 
               <div className="text-xs text-gray-400 dark:text-gray-500 flex flex-col gap-0.5">
                 <span>תאריך קליטה: <span className="text-gray-600 dark:text-gray-400">{fmt(r.created_at)}</span></span>
@@ -332,6 +383,14 @@ ${labels.map(l => `
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('rackets.notes')}</label>
             <textarea rows={2} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
               className="input resize-none" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              מחיר השכרה ייחודי (רשות)
+            </label>
+            <input type="number" min="0" step="0.5" value={form.price_override}
+              onChange={e => setForm(f => ({ ...f, price_override: e.target.value }))}
+              className="input" placeholder={`השאר ריק לברירת המחדל (₪${activeClub?.price_per_rental ?? 0})`} />
           </div>
           <div className="flex gap-3 mt-1">
             <button type="button" onClick={() => setAddOpen(false)} className="btn-secondary flex-1">{t('common.cancel')}</button>

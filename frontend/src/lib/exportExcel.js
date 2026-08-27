@@ -5,20 +5,24 @@ function download(wb, filename) {
 }
 
 export function exportRackets(rackets, pricePerRental, clubName) {
-  const price = pricePerRental ?? 0
-  const rows = rackets.map(r => ({
-    'שם מחבט':      r.name,
-    'מותג':         r.brand || '',
-    'סטטוס':        r.archived_at ? 'ארכיון' : r.status === 'available' ? 'פנוי' : r.status === 'rented' ? 'מושכר' : 'תיקון',
-    'מספר שימושים': r.usage_count,
-    'הכנסות (₪)':   price ? r.usage_count * price : '',
-    'הערות':        r.notes || '',
-    'תאריך קליטה':  r.created_at ? new Date(r.created_at).toLocaleDateString('he-IL') : '',
-    'תאריך סיום':   r.archived_at ? new Date(r.archived_at).toLocaleDateString('he-IL') : '',
-  }))
+  const defaultPrice = pricePerRental ?? 0
+  const rows = rackets.map(r => {
+    const price = r.price_override ?? defaultPrice
+    return {
+      'שם מחבט':      r.name,
+      'מותג':         r.brand || '',
+      'סטטוס':        r.archived_at ? 'ארכיון' : r.status === 'available' ? 'פנוי' : r.status === 'rented' ? 'מושכר' : 'תיקון',
+      'מספר שימושים': r.usage_count,
+      'מחיר השכרה (₪)': r.price_override != null ? `${price} (ייחודי)` : (price || ''),
+      'הכנסות (₪)':   price ? r.usage_count * price : '',
+      'הערות':        r.notes || '',
+      'תאריך קליטה':  r.created_at ? new Date(r.created_at).toLocaleDateString('he-IL') : '',
+      'תאריך סיום':   r.archived_at ? new Date(r.archived_at).toLocaleDateString('he-IL') : '',
+    }
+  })
 
   const ws = XLSX.utils.json_to_sheet(rows)
-  ws['!cols'] = [20, 14, 10, 16, 16, 20, 14, 14].map(w => ({ wch: w }))
+  ws['!cols'] = [20, 14, 10, 16, 16, 16, 20, 14, 14].map(w => ({ wch: w }))
 
   const wb = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(wb, ws, 'מחבטים')
