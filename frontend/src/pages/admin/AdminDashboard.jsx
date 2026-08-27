@@ -59,29 +59,38 @@ export default function AdminDashboard() {
     setLoading(true)
     async function load() {
       const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
+      const defaultPrice = activeClub?.price_per_rental ?? null
+      // מחיר בפועל להשכרה = מחיר ייחודי למחבט אם הוגדר, אחרת ברירת המחדל של המועדון
+      const effectivePrice = (racket) => racket?.price_override ?? defaultPrice ?? 0
+      const sumRevenue = (rows) => rows.reduce((sum, r) => sum + effectivePrice(r.rackets), 0)
+
       const [racketRes, rentalRes, todayRes, monthRes, totalRes] = await Promise.all([
         supabase.from('rackets').select('status').eq('club_id', activeClub.id).is('archived_at', null),
         supabase.from('rentals').select('id, started_at, rackets(name), customers(full_name, phone)')
           .eq('club_id', activeClub.id).is('returned_at', null),
         supabase.from('rentals').select('id').eq('club_id', activeClub.id)
           .gte('started_at', new Date().toISOString().slice(0, 10)),
-        supabase.from('rentals').select('id', { count: 'exact', head: true })
+        supabase.from('rentals').select('id, rackets(price_override)')
           .eq('club_id', activeClub.id).gte('started_at', monthStart),
-        supabase.from('rentals').select('id', { count: 'exact', head: true })
+        supabase.from('rentals').select('id, rackets(price_override)')
           .eq('club_id', activeClub.id),
       ])
 
       const rackets = racketRes.data || []
       const open    = rentalRes.data || []
+      const monthRentals = monthRes.data || []
+      const totalRentals = totalRes.data || []
 
-      const price = activeClub?.price_per_rental ?? null
+      const price = defaultPrice
       setStats({
         available:    rackets.filter(r => r.status === 'available').length,
         rented:       rackets.filter(r => r.status === 'rented').length,
         repair:       rackets.filter(r => r.status === 'repair').length,
         today:        todayRes.data?.length || 0,
-        monthCount:   monthRes.count || 0,
-        totalCount:   totalRes.count || 0,
+        monthCount:   monthRentals.length,
+        totalCount:   totalRentals.length,
+        monthRevenue: price != null ? sumRevenue(monthRentals) : null,
+        totalRevenue: price != null ? sumRevenue(totalRentals) : null,
         price,
       })
 
@@ -90,17 +99,19 @@ export default function AdminDashboard() {
 
       const { buckets, monthly } = buildBuckets(period)
       const sliceLen = monthly ? 7 : 10
-      const rangeRes = await supabase.from('rentals').select('started_at')
+      const rangeRes = await supabase.from('rentals').select('started_at, rackets(price_override)')
         .eq('club_id', activeClub.id)
         .gte('started_at', buckets[0].start)
       const counts = {}
+      const revenueByBucket = {}
       ;(rangeRes.data || []).forEach(r => {
         const k = r.started_at.slice(0, sliceLen)
         counts[k] = (counts[k] || 0) + 1
+        revenueByBucket[k] = (revenueByBucket[k] || 0) + effectivePrice(r.rackets)
       })
       setChart(buckets.map(d => ({ name: d.date, rentals: counts[d.key] || 0 })))
       setRevenueChart(price != null
-        ? buckets.map(d => ({ name: d.date, revenue: (counts[d.key] || 0) * price }))
+        ? buckets.map(d => ({ name: d.date, revenue: revenueByBucket[d.key] || 0 }))
         : [])
 
       // ── לקוחות חדשים מול חוזרים — לפי התקופה הנבחרת ──
@@ -197,7 +208,7 @@ export default function AdminDashboard() {
                 <Banknote size={18} className="text-emerald-600 dark:text-emerald-400" />
               </div>
               <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                ₪{(stats.monthCount * stats.price).toLocaleString()}
+                ₪{stats.monthRevenue.toLocaleString()}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400 leading-tight">הכנסות החודש</p>
             </div>
@@ -206,7 +217,7 @@ export default function AdminDashboard() {
                 <Banknote size={18} className="text-emerald-600 dark:text-emerald-400" />
               </div>
               <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                ₪{(stats.totalCount * stats.price).toLocaleString()}
+                ₪{stats.totalRevenue.toLocaleString()}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400 leading-tight">סך הכל הכנסות</p>
             </div>
