@@ -76,6 +76,11 @@ export default function RentalHistory() {
                     <UserCog size={10} /> {r.profiles.full_name}
                   </p>
                 )}
+                {r.notes && (
+                  <p className="text-xs text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800/60 rounded-lg px-2 py-1 mt-1.5 italic">
+                    "{r.notes}"
+                  </p>
+                )}
               </div>
               <div className="shrink-0 text-end">
                 {!r.returned_at
