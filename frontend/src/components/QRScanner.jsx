@@ -19,18 +19,23 @@ export default function QRScanner({ onResult, onClose, large = false }) {
     requestAnimationFrame(() => requestAnimationFrame(() => {
       try {
         scanner.current = new Html5Qrcode(id.current)
+        const scanConfig = { fps: 15, qrbox: { width: large ? 350 : 250, height: large ? 350 : 250 }, aspectRatio: 1 }
         Html5Qrcode.getCameras()
           .then(cameras => {
             if (!cameras.length) { setError('לא נמצאה מצלמה'); setLoading(false); return }
             const cam = cameras.find(c => /back|rear|environment/i.test(c.label)) || cameras[cameras.length - 1]
+            // מנסה רזולוציה גבוהה קודם (עוזר לקוד קטן/צפוף); אם המכשיר דוחה את זה, נופל חזרה להגדרה הבסיסית
             return scanner.current.start(
-              // רזולוציה גבוהה מפורשת — בלי זה הדפדפן פותח סטרים נמוך מדי,
-              // ובשילוב עם הזום הדיגיטלי (large) האיכות יורדת מתחת למה שהמפענח צריך
               { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
-              { fps: 15, qrbox: { width: large ? 350 : 250, height: large ? 350 : 250 }, aspectRatio: 1 },
+              scanConfig,
               (text) => { onResult(text) },
               () => {}
-            )
+            ).catch(() => scanner.current.start(
+              { facingMode: 'environment' },
+              scanConfig,
+              (text) => { onResult(text) },
+              () => {}
+            ))
           })
           .then(() => {
             setLoading(false)
