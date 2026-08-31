@@ -24,7 +24,9 @@ export default function QRScanner({ onResult, onClose, large = false }) {
             if (!cameras.length) { setError('לא נמצאה מצלמה'); setLoading(false); return }
             const cam = cameras.find(c => /back|rear|environment/i.test(c.label)) || cameras[cameras.length - 1]
             return scanner.current.start(
-              { facingMode: 'environment' },
+              // רזולוציה גבוהה מפורשת — בלי זה הדפדפן פותח סטרים נמוך מדי,
+              // ובשילוב עם הזום הדיגיטלי (large) האיכות יורדת מתחת למה שהמפענח צריך
+              { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
               { fps: 15, qrbox: { width: large ? 350 : 250, height: large ? 350 : 250 }, aspectRatio: 1 },
               (text) => { onResult(text) },
               () => {}
