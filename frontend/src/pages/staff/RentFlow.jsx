@@ -31,6 +31,10 @@ export default function RentFlow() {
   const [showSearch, setShowSearch]   = useState(false)
   const [damagedWarn, setDamagedWarn] = useState(false)
   const [earnedPoints, setEarnedPoints] = useState(0)
+  const [racketSearch, setRacketSearch]       = useState('')
+  const [racketSearchRes, setRacketSearchRes] = useState([])
+  const [racketSearching, setRacketSearching] = useState(false)
+  const [showRacketSearch, setShowRacketSearch] = useState(false)
 
   async function checkAndSetCustomer(data) {
     const clubId = activeClub?.id || profile?.club_id
@@ -82,11 +86,7 @@ export default function RentFlow() {
     setSearching(false)
   }
 
-  async function handleRacketQR(code) {
-    setLoading(true)
-    const { data } = await supabase.from('rackets').select('*').eq('qr_code', code).maybeSingle()
-    setLoading(false)
-    if (!data) { setError('לא נמצא מחבט / Racket not found'); return }
+  function checkAndSetRacket(data) {
     if (data.status !== 'available') {
       setError(data.status === 'rented' ? t('rent.alreadyRented') : t('rent.notAvailable'))
       return
@@ -94,6 +94,28 @@ export default function RentFlow() {
     setRacket(data)
     setStep(STEP.CONFIRM)
     setError('')
+  }
+
+  async function handleRacketQR(code) {
+    setLoading(true)
+    const { data } = await supabase.from('rackets').select('*').eq('qr_code', code).maybeSingle()
+    setLoading(false)
+    if (!data) { setError('לא נמצא מחבט / Racket not found'); return }
+    checkAndSetRacket(data)
+  }
+
+  async function handleRacketSearch(e) {
+    e.preventDefault()
+    if (!racketSearch.trim()) return
+    setRacketSearching(true)
+    const q = `%${racketSearch}%`
+    const { data } = await supabase.from('rackets').select('*')
+      .eq('club_id', activeClub?.id || profile?.club_id)
+      .is('archived_at', null)
+      .or(`name.ilike.${q},brand.ilike.${q}`)
+      .limit(10)
+    setRacketSearchRes(data || [])
+    setRacketSearching(false)
   }
 
   async function confirmRental() {
@@ -128,6 +150,9 @@ export default function RentFlow() {
     setSearchRes([])
     setShowSearch(false)
     setEarnedPoints(0)
+    setRacketSearch('')
+    setRacketSearchRes([])
+    setShowRacketSearch(false)
   }
 
   return (
@@ -266,6 +291,37 @@ export default function RentFlow() {
                 <CircleDot size={18} className="text-brand-600 dark:text-brand-400" /> {t('rent.scanRacket')}
               </h2>
               {loading ? <Spinner /> : <QRScanner onResult={handleRacketQR} large />}
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+                <span className="text-xs text-gray-400 dark:text-gray-500">{t('common.or')}</span>
+                <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+              </div>
+              <button onClick={() => setShowRacketSearch(s => !s)} className="btn-secondary w-full">
+                <Search size={16} /> חפש מחבט (ללא סריקה)
+              </button>
+              {showRacketSearch && (
+                <div className="flex flex-col gap-3">
+                  <form onSubmit={handleRacketSearch} className="flex gap-2">
+                    <input value={racketSearch} onChange={e => setRacketSearch(e.target.value)}
+                      className="input flex-1" placeholder="שם או מותג המחבט" />
+                    <button type="submit" className="btn-primary">{racketSearching ? '...' : <Search size={16} />}</button>
+                  </form>
+                  {racketSearchRes.map(r => (
+                    <button key={r.id} onClick={() => checkAndSetRacket(r)}
+                      className="card text-start hover:border-brand-200 border border-transparent transition-colors">
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-gray-100">{r.name}</p>
+                          {r.brand && <p className="text-sm text-gray-500 dark:text-gray-400">{r.brand}</p>}
+                        </div>
+                        <span className={`badge ${r.status === 'available' ? 'badge-green' : r.status === 'rented' ? 'badge-amber' : 'badge-red'}`}>
+                          {r.status === 'available' ? t('rackets.available') : r.status === 'rented' ? t('rackets.rented') : t('rackets.repair')}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <button onClick={() => setStep(STEP.CHECKIN)} className="btn-secondary w-full">
               {t('common.back')}

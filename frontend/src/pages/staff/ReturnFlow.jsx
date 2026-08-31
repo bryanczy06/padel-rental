@@ -7,13 +7,13 @@ import { useToast } from '../../components/Toast'
 import Layout from '../../components/Layout'
 import QRScanner from '../../components/QRScanner'
 import Spinner from '../../components/Spinner'
-import { CheckCircle2, CircleDot, User, ChevronRight, AlertTriangle } from 'lucide-react'
+import { CheckCircle2, CircleDot, User, ChevronRight, AlertTriangle, Search } from 'lucide-react'
 
 const STEP = { SCAN: 1, CONDITION: 2, DONE: 3 }
 
 export default function ReturnFlow() {
   const { t }       = useTranslation()
-  const { profile } = useAuth()
+  const { profile, activeClub } = useAuth()
   const navigate    = useNavigate()
   const toast       = useToast()
 
@@ -24,13 +24,13 @@ export default function ReturnFlow() {
   const [notes, setNotes]       = useState('')
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState('')
+  const [search, setSearch]           = useState('')
+  const [searchRes, setSearchRes]     = useState([])
+  const [searching, setSearching]     = useState(false)
+  const [showSearch, setShowSearch]   = useState(false)
 
-  async function handleRacketQR(code) {
-    setLoading(true)
+  async function loadOpenRental(r) {
     setError('')
-    const { data: r } = await supabase.from('rackets').select('*').eq("qr_code", code).maybeSingle()
-    if (!r) { setError('לא נמצא מחבט / Racket not found'); setLoading(false); return }
-
     const { data: openRental } = await supabase
       .from('rentals')
       .select('*, customers(full_name, phone)')
@@ -38,11 +38,33 @@ export default function ReturnFlow() {
       .is('returned_at', null)
       .maybeSingle()
 
-    setLoading(false)
     if (!openRental) { setError(t('return.noOpenRental')); return }
     setRacket(r)
     setRental(openRental)
     setStep(STEP.CONDITION)
+  }
+
+  async function handleRacketQR(code) {
+    setLoading(true)
+    setError('')
+    const { data: r } = await supabase.from('rackets').select('*').eq("qr_code", code).maybeSingle()
+    setLoading(false)
+    if (!r) { setError('לא נמצא מחבט / Racket not found'); return }
+    await loadOpenRental(r)
+  }
+
+  async function handleSearch(e) {
+    e.preventDefault()
+    if (!search.trim()) return
+    setSearching(true)
+    const q = `%${search}%`
+    const { data } = await supabase.from('rackets').select('*')
+      .eq('club_id', activeClub?.id || profile?.club_id)
+      .eq('status', 'rented')
+      .or(`name.ilike.${q},brand.ilike.${q}`)
+      .limit(10)
+    setSearchRes(data || [])
+    setSearching(false)
   }
 
   async function confirmReturn() {
@@ -91,6 +113,33 @@ export default function ReturnFlow() {
               <CircleDot size={18} className="text-brand-600 dark:text-brand-400" /> {t('return.scanRacket')}
             </h2>
             {loading ? <Spinner /> : <QRScanner onResult={handleRacketQR} large />}
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+              <span className="text-xs text-gray-400 dark:text-gray-500">{t('common.or')}</span>
+              <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+            </div>
+            <button onClick={() => setShowSearch(s => !s)} className="btn-secondary w-full">
+              <Search size={16} /> חפש מחבט (ללא סריקה)
+            </button>
+            {showSearch && (
+              <div className="flex flex-col gap-3">
+                <form onSubmit={handleSearch} className="flex gap-2">
+                  <input value={search} onChange={e => setSearch(e.target.value)}
+                    className="input flex-1" placeholder="שם או מותג המחבט" />
+                  <button type="submit" className="btn-primary">{searching ? '...' : <Search size={16} />}</button>
+                </form>
+                {searchRes.map(r => (
+                  <button key={r.id} onClick={() => loadOpenRental(r)}
+                    className="card text-start hover:border-brand-200 border border-transparent transition-colors">
+                    <p className="font-medium text-gray-900 dark:text-gray-100">{r.name}</p>
+                    {r.brand && <p className="text-sm text-gray-500 dark:text-gray-400">{r.brand}</p>}
+                  </button>
+                ))}
+                {!searching && showSearch && search && searchRes.length === 0 && (
+                  <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-2">לא נמצאו מחבטים מושכרים בשם זה</p>
+                )}
+              </div>
+            )}
           </div>
         )}
 
