@@ -3,6 +3,7 @@ import { supabase } from './supabase'
 import { getProfile } from './auth'
 
 const AuthContext = createContext(null)
+const LAST_CLUB_KEY = 'racktive_last_club_id'
 
 export function AuthProvider({ children }) {
   const [profile, setProfile]             = useState(undefined)
@@ -10,22 +11,30 @@ export function AuthProvider({ children }) {
   const [activeClub, setActiveClub]       = useState(null)
   const [availableClubs, setAvailableClubs] = useState([])
 
+  // בוחר ברירת מחדל: הסניף האחרון שנבחר (אם עדיין ברשימה) → הסניף הראשי של המשתמש → הראשון ברשימה
+  function pickDefaultClub(list, prof) {
+    if (!list.length) return null
+    let lastId = null
+    try { lastId = localStorage.getItem(LAST_CLUB_KEY) } catch {}
+    return list.find(c => c.id === lastId) || list.find(c => c.id === prof.club_id) || list[0]
+  }
+
   async function loadClubs(prof) {
     if (!prof) { setActiveClub(null); setAvailableClubs([]); return }
 
     if (prof.role === 'super_admin') {
       const { data } = await supabase.from('clubs').select('*').order('name')
-      setAvailableClubs(data || [])
-      // default to their own club if exists, else first
-      const own = (data || []).find(c => c.id === prof.club_id) || (data || [])[0] || null
-      setActiveClub(prev => prev ? (data || []).find(c => c.id === prev.id) || own : own)
+      const list = data || []
+      setAvailableClubs(list)
+      const def = pickDefaultClub(list, prof)
+      setActiveClub(prev => prev ? list.find(c => c.id === prev.id) || def : def)
     } else if (prof.role === 'owner') {
       const { data: ownerRows } = await supabase
         .from('club_owners').select('clubs(*)').eq('profile_id', prof.id)
-      const data = (ownerRows || []).map(r => r.clubs).filter(c => c && c.active).sort((a, b) => a.name.localeCompare(b.name))
-      setAvailableClubs(data)
-      const own = data.find(c => c.id === prof.club_id) || data[0] || null
-      setActiveClub(prev => prev ? data.find(c => c.id === prev.id) || own : own)
+      const list = (ownerRows || []).map(r => r.clubs).filter(c => c && c.active).sort((a, b) => a.name.localeCompare(b.name))
+      setAvailableClubs(list)
+      const def = pickDefaultClub(list, prof)
+      setActiveClub(prev => prev ? list.find(c => c.id === prev.id) || def : def)
     } else {
       // admin / staff — check staff_clubs for multiple branches
       const { data: scRows } = await supabase
@@ -37,7 +46,8 @@ export function AuthProvider({ children }) {
           .from('clubs').select('*').in('id', clubIds).eq('active', true)
         const clubs = clubsData || []
         setAvailableClubs(clubs)
-        setActiveClub(prev => prev ? clubs.find(c => c.id === prev.id) || clubs[0] || null : clubs[0] || null)
+        const def = pickDefaultClub(clubs, prof)
+        setActiveClub(prev => prev ? clubs.find(c => c.id === prev.id) || def : def)
       } else {
         const club = prof.clubs?.active ? { ...prof.clubs, id: prof.club_id } : null
         setAvailableClubs(club ? [club] : [])
@@ -77,6 +87,7 @@ export function AuthProvider({ children }) {
 
   function switchClub(club) {
     setActiveClub(club)
+    try { localStorage.setItem(LAST_CLUB_KEY, club.id) } catch {}
   }
 
   return (

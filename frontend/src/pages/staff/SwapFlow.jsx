@@ -27,6 +27,11 @@ export default function SwapFlow() {
     setError('')
     const { data: r } = await supabase.from('rackets').select('*').eq("qr_code", code).maybeSingle()
     if (!r) { setError('מחבט לא נמצא'); setLoading(false); return }
+    const clubId = activeClub?.id || profile?.club_id
+    if (clubId && r.club_id !== clubId) {
+      setError('המחבט הזה שייך לסניף אחר! ודא שאתה מחובר לסניף הנכון במערכת (למעלה) ונסה שוב.')
+      setLoading(false); return
+    }
 
     const { data: rental } = await supabase
       .from('rentals')
@@ -49,6 +54,11 @@ export default function SwapFlow() {
 
     const { data: r } = await supabase.from('rackets').select('*').eq("qr_code", code).maybeSingle()
     if (!r) { setError('מחבט לא נמצא'); setLoading(false); return }
+    const clubId = activeClub?.id || profile?.club_id
+    if (clubId && r.club_id !== clubId) {
+      setError('המחבט הזה שייך לסניף אחר! ודא שאתה מחובר לסניף הנכון במערכת (למעלה) ונסה שוב.')
+      setLoading(false); return
+    }
     if (r.status !== 'available') { setError('המחבט החדש אינו פנוי'); setLoading(false); return }
 
     setLoading(false)

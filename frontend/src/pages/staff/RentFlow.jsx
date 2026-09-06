@@ -87,6 +87,11 @@ export default function RentFlow() {
   }
 
   function checkAndSetRacket(data) {
+    const clubId = activeClub?.id || profile?.club_id
+    if (clubId && data.club_id !== clubId) {
+      setError('המחבט הזה שייך לסניף אחר! ודא שאתה מחובר לסניף הנכון במערכת (למעלה) ונסה שוב.')
+      return
+    }
     if (data.status !== 'available') {
       setError(data.status === 'rented' ? t('rent.alreadyRented') : t('rent.notAvailable'))
       return

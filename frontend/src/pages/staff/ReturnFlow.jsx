@@ -31,6 +31,11 @@ export default function ReturnFlow() {
 
   async function loadOpenRental(r) {
     setError('')
+    const clubId = activeClub?.id || profile?.club_id
+    if (clubId && r.club_id !== clubId) {
+      setError('המחבט הזה שייך לסניף אחר! ודא שאתה מחובר לסניף הנכון במערכת (למעלה) ונסה שוב.')
+      return
+    }
     const { data: openRental } = await supabase
       .from('rentals')
       .select('*, customers(full_name, phone)')
