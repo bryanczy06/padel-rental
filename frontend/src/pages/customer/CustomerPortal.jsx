@@ -11,11 +11,11 @@ const TERMS = {
     items: [
       { label: 'נזק מכוון ₪500', text: 'פגיעה מכוונת במחבט, לרבות הטחתו ברצפה, בקיר, בקשת או בכל חלק אחר, תחויב בסך 500 ש״ח.' },
       { label: 'גניבה או אובדן ₪900', text: 'גניבה או אובדן של המחבט יחויבו בסך 900 ש״ח.' },
-      { label: 'עדכונים ממועדון הלקוחות', text: 'בהרשמתך הינך מאשר/ת קבלת עדכונים בדוא״ל ו/או בטלפון בנוגע לנקודות, הטבות ומבצעים של מועדון הלקוחות.' },
     ],
-    agree:   'קראתי ואני מסכים/ה לתנאי השימוש, לרבות קבלת עדכונים ממועדון הלקוחות',
+    agree:   'קראתי ואני מסכים/ה לתנאי השימוש',
     show:    'קרא תנאי שימוש',
     hide:    'הסתר תנאי שימוש',
+    marketing: 'אני מעוניין/ת לקבל עדכונים בדוא״ל ו/או בטלפון בנוגע לנקודות, הטבות ומבצעים של מועדון הלקוחות (רשות)',
   },
   en: {
     title:   'Terms of Use — Racket Rental',
@@ -23,11 +23,11 @@ const TERMS = {
     items: [
       { label: '₪500 Intentional Damage', text: 'Any intentional damage to the racket, including smashing it against the floor, wall, net, or any other surface, will result in a charge of ₪500 (NIS).' },
       { label: '₪900 Theft or Loss', text: 'Theft or loss of the racket will result in a charge of ₪900 (NIS).' },
-      { label: 'Customer Club Updates', text: 'By registering, you consent to receive email and/or phone updates from us regarding points, perks, and promotions of the customer club.' },
     ],
-    agree:   'I have read and agree to the Terms of Use, including receiving customer club updates',
+    agree:   'I have read and agree to the Terms of Use',
     show:    'Read Terms of Use',
     hide:    'Hide Terms of Use',
+    marketing: 'I would like to receive email and/or phone updates about points, perks, and promotions of the customer club (optional)',
   },
 }
 
@@ -105,6 +105,7 @@ export default function CustomerPortal() {
   const [agreedTerms, setAgreedTerms] = useState(false)
   const [showTerms, setShowTerms]     = useState(false)
   const [termsOpened, setTermsOpened] = useState(false)
+  const [marketingConsent, setMarketingConsent] = useState(true)
 
   useEffect(() => {
     async function init() {
@@ -143,7 +144,7 @@ export default function CustomerPortal() {
     setSaving(true)
     setJoinError('')
     const { data, error: err } = await supabase.rpc('register_customer', {
-      p_full_name: form.full_name, p_phone: form.phone, p_email: form.email, p_marketing_consent: true,
+      p_full_name: form.full_name, p_phone: form.phone, p_email: form.email, p_marketing_consent: marketingConsent,
     }).single()
     setSaving(false)
     if (err) { setJoinError(t.regError); return }
@@ -296,6 +297,13 @@ export default function CustomerPortal() {
                       {TERMS[lang].agree}
                       {!termsOpened && <span className="block text-xs text-gray-400 mt-0.5">{lang === 'he' ? '(יש לפתוח ולקרוא את התנאים תחילה)' : '(please open and read the terms first)'}</span>}
                     </span>
+                  </label>
+                  {/* Marketing consent — optional */}
+                  <label className="flex items-start gap-3 select-none cursor-pointer">
+                    <input type="checkbox" checked={marketingConsent}
+                      onChange={e => setMarketingConsent(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600 accent-brand-600 shrink-0" />
+                    <span className="text-sm text-gray-700">{TERMS[lang].marketing}</span>
                   </label>
                   {joinError && <p className="text-sm text-red-500 bg-red-50 px-3 py-2 rounded-lg">{joinError}</p>}
                   <button type="submit" disabled={saving || !agreedTerms || !form.email.trim()}
