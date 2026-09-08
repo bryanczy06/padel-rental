@@ -7,7 +7,7 @@ import Layout from '../../components/Layout'
 import Modal from '../../components/Modal'
 import QRCodeCard from '../../components/QRCodeCard'
 import Spinner from '../../components/Spinner'
-import { Plus, QrCode, Wrench, Check, CircleDot, Trash2, Archive, ArchiveRestore, ShieldCheck, Pencil, Download, Printer, Banknote, X } from 'lucide-react'
+import { Plus, QrCode, Wrench, Check, CircleDot, Trash2, Archive, ArchiveRestore, ShieldCheck, Pencil, Download, Printer, Banknote, X, Layers, Repeat } from 'lucide-react'
 import { exportRackets, exportRacketQRPairs } from '../../lib/exportExcel'
 import QRCode from 'qrcode'
 
@@ -59,6 +59,10 @@ export default function Rackets() {
   const [editPriceId, setEditPriceId] = useState(null)
   const [racketPriceDraft, setRacketPriceDraft] = useState('')
   const [savingRacketPrice, setSavingRacketPrice] = useState(false)
+  const [bulkOpen, setBulkOpen]   = useState(false)
+  const [bulkQty, setBulkQty]     = useState('')
+  const [bulkSaving, setBulkSaving] = useState(false)
+  const [replacingId, setReplacingId] = useState(null)
 
   async function load() {
     const { data } = await supabase.from('rackets').select('*')
@@ -87,6 +91,42 @@ export default function Rackets() {
     setForm({ name: '', brand: '', notes: '', price_override: '' })
     setAddOpen(false)
     load()
+  }
+
+  async function addBulkRackets(e) {
+    e.preventDefault()
+    const qty = parseInt(bulkQty, 10)
+    if (!qty || qty < 1) return
+    setBulkSaving(true)
+    const rows = Array.from({ length: qty }, (_, i) => ({
+      name: `מחבט ${i + 1}`,
+      club_id: activeClub.id,
+    }))
+    const { error } = await supabase.from('rackets').insert(rows)
+    setBulkSaving(false)
+    if (error) { toast('שגיאה: ' + error.message, 'error'); return }
+    toast(`${qty} מחבטים נוספו בהצלחה`)
+    setBulkQty('')
+    setBulkOpen(false)
+    load()
+  }
+
+  async function replaceRacket(r) {
+    if (!confirm(`"${r.name}" יעבור לארכיון, ומחבט חדש בשם "${r.name}" ייווצר במקומו (עם ברקוד חדש). להמשיך?`)) return
+    setReplacingId(r.id)
+    const { error: archErr } = await supabase.from('rackets')
+      .update({ archived_at: new Date().toISOString(), status: 'available' })
+      .eq('id', r.id)
+    if (archErr) { toast('שגיאה: ' + archErr.message, 'error'); setReplacingId(null); return }
+
+    const { data: newRacket, error: insErr } = await supabase.from('rackets')
+      .insert({ name: r.name, brand: r.brand, club_id: r.club_id, price_override: r.price_override })
+      .select().single()
+    setReplacingId(null)
+    if (insErr) { toast('שגיאה ביצירת המחבט החדש: ' + insErr.message, 'error'); load(); return }
+    toast(`"${r.name}" הוחלף — המחבט הישן בארכיון, החדש מוכן`)
+    await load()
+    setQRTarget(newRacket)
   }
 
   async function saveRacketPrice(id) {
@@ -217,6 +257,11 @@ ${labels.map(l => `
               className="btn-secondary text-sm">
               <Download size={15} /> אקסל
             </button>
+            {!showArchive && active.length === 0 && (
+              <button onClick={() => setBulkOpen(true)} className="btn-secondary text-sm">
+                <Layers size={15} /> הוסף מחבטים בכמות
+              </button>
+            )}
             {!showArchive && (
               <button onClick={() => setAddOpen(true)} className="btn-primary">
                 <Plus size={16} /> {t('rackets.add')}
@@ -343,6 +388,10 @@ ${labels.map(l => `
                     <button onClick={() => archiveRacket(r.id, r.name)} className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-amber-500 dark:text-amber-400 hover:bg-amber-50 dark:bg-amber-900/30 rounded-lg transition-colors" title="העבר לארכיון">
                       <Archive size={15} />
                     </button>
+                    <button onClick={() => replaceRacket(r)} disabled={replacingId === r.id}
+                      className="btn-secondary text-xs py-1.5 px-3" title="העבר לארכיון וצור מחבט חדש עם אותו שם">
+                      <Repeat size={13} /> {replacingId === r.id ? '...' : 'החלפה'}
+                    </button>
                   </>
                 )}
                 {r.archived_at && (
@@ -396,6 +445,27 @@ ${labels.map(l => `
             <button type="button" onClick={() => setAddOpen(false)} className="btn-secondary flex-1">{t('common.cancel')}</button>
             <button type="submit" disabled={saving} className="btn-primary flex-1">
               {saving ? t('common.loading') : t('rackets.saveBtn')}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Bulk add modal */}
+      <Modal open={bulkOpen} onClose={() => setBulkOpen(false)} title="הוסף מחבטים בכמות">
+        <form onSubmit={addBulkRackets} className="flex flex-col gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">כמות מחבטים *</label>
+            <input required type="number" min="1" step="1" value={bulkQty}
+              onChange={e => setBulkQty(e.target.value)}
+              className="input" placeholder="לדוגמה: 24" autoFocus />
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5">
+              ייווצרו מחבטים בשמות "מחבט 1" עד "מחבט {bulkQty || 'N'}", כל אחד עם ברקוד ייחודי משלו.
+            </p>
+          </div>
+          <div className="flex gap-3 mt-1">
+            <button type="button" onClick={() => setBulkOpen(false)} className="btn-secondary flex-1">{t('common.cancel')}</button>
+            <button type="submit" disabled={bulkSaving} className="btn-primary flex-1">
+              {bulkSaving ? t('common.loading') : 'צור מחבטים'}
             </button>
           </div>
         </form>
