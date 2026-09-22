@@ -6,7 +6,7 @@ import { useToast } from '../../components/Toast'
 import Layout from '../../components/Layout'
 import Modal from '../../components/Modal'
 import Spinner from '../../components/Spinner'
-import { Plus, Trash2, UserCog, Phone, Shield, Crown, Pencil, Download, Clock } from 'lucide-react'
+import { Plus, Trash2, UserCog, Phone, Shield, Crown, Pencil, Download, Clock, KeyRound } from 'lucide-react'
 import { exportStaff } from '../../lib/exportExcel'
 
 function roleBadge(role) {
@@ -34,31 +34,28 @@ export default function Staff() {
   const [assignEmail, setAssignEmail] = useState('')
   const [editOpen, setEditOpen] = useState(false)
   const [editTarget, setEditTarget] = useState(null)
+  const [pwOpen, setPwOpen]     = useState(false)
+  const [pwTarget, setPwTarget] = useState(null)
+  const [newPassword, setNewPassword] = useState('')
+  const [pwSaving, setPwSaving] = useState(false)
   const [form, setForm]         = useState({ full_name: '', email: '', phone: '', password: '', role: 'staff' })
   const [editForm, setEditForm] = useState({ full_name: '', phone: '', email: '', role: 'staff', club_id: '' })
   const [saving, setSaving]     = useState(false)
 
   async function load() {
     if (!activeClub?.id) return
-    const [{ data: staffData }, { data: ownerRows }, { data: scRows }] = await Promise.all([
-      supabase.from('profiles').select('*').eq('club_id', activeClub.id).order('created_at'),
-      supabase.from('club_owners').select('profiles(*)').eq('club_id', activeClub.id),
-      supabase.from('staff_clubs').select('profiles(*)').eq('club_id', activeClub.id),
+    // get_club_staff is a security-definer RPC: it safely returns everyone
+    // associated with this club (primary + multi-branch + owners) without
+    // depending on the profiles RLS policy, which must stay simple to avoid
+    // breaking login.
+    const [{ data: staffData }, { data: ownerRows }] = await Promise.all([
+      supabase.rpc('get_club_staff', { target_club_id: activeClub.id }),
+      supabase.from('club_owners').select('profile_id').eq('club_id', activeClub.id),
     ])
     const list = (staffData || []).filter(s => s.role !== 'super_admin')
-    // add multi-branch staff not already in list
-    for (const row of (scRows || [])) {
-      const p = row.profiles
-      if (p && p.role !== 'super_admin' && !list.find(s => s.id === p.id)) {
-        list.push(p)
-      }
-    }
-    const owners = (ownerRows || []).map(r => r.profiles).filter(Boolean)
-    for (const owner of owners) {
-      if (owner.role !== 'super_admin' && !list.find(s => s.id === owner.id)) {
-        list.unshift(owner)
-      }
-    }
+      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+    const ownerIds = new Set((ownerRows || []).map(r => r.profile_id))
+    list.sort((a, b) => (ownerIds.has(b.id) ? 1 : 0) - (ownerIds.has(a.id) ? 1 : 0))
     setStaff(list)
 
     // load rental + checkin counts per staff member
@@ -217,6 +214,36 @@ export default function Staff() {
     setEditOpen(true)
   }
 
+  function openPasswordReset(s) {
+    setPwTarget(s)
+    setNewPassword('')
+    setPwOpen(true)
+  }
+
+  async function savePassword(e) {
+    e.preventDefault()
+    setPwSaving(true)
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/reset-staff-password`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ user_id: pwTarget.id, new_password: newPassword }),
+      }
+    )
+    const json = await res.json().catch(() => ({}))
+    setPwSaving(false)
+    if (!res.ok || json.error) { toast(json.error || t('common.error'), 'error'); return }
+    toast(`הסיסמה של ${pwTarget.full_name} עודכנה`)
+    setPwOpen(false)
+    setNewPassword('')
+  }
+
   if (loading) return <Layout><Spinner /></Layout>
 
   return (
@@ -258,6 +285,10 @@ export default function Staff() {
                     <button onClick={() => openEdit(s)}
                       className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:bg-brand-900/30 rounded-lg transition-colors">
                       <Pencil size={14} />
+                    </button>
+                    <button onClick={() => openPasswordReset(s)} title="שנה סיסמה"
+                      className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:bg-amber-900/30 rounded-lg transition-colors">
+                      <KeyRound size={14} />
                     </button>
                     {s.id !== profile.id && (
                       <button onClick={() => removeStaff(s.id)}
@@ -403,6 +434,23 @@ export default function Staff() {
             <button type="button" onClick={() => setEditOpen(false)} className="btn-secondary flex-1">ביטול</button>
             <button type="submit" disabled={saving} className="btn-primary flex-1">
               {saving ? 'שומר...' : 'שמור'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+      {/* Change password modal */}
+      <Modal open={pwOpen} onClose={() => setPwOpen(false)} title={`שינוי סיסמה — ${pwTarget?.full_name}`}>
+        <form onSubmit={savePassword} className="flex flex-col gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">סיסמה חדשה *</label>
+            <input required type="password" minLength={6} value={newPassword}
+              onChange={e => setNewPassword(e.target.value)}
+              className="input" placeholder="לפחות 6 תווים" autoFocus />
+          </div>
+          <div className="flex gap-3 mt-1">
+            <button type="button" onClick={() => setPwOpen(false)} className="btn-secondary flex-1">ביטול</button>
+            <button type="submit" disabled={pwSaving} className="btn-primary flex-1">
+              {pwSaving ? 'שומר...' : 'עדכן סיסמה'}
             </button>
           </div>
         </form>
